@@ -63,4 +63,12 @@ public struct Environment<Value>: DynamicProperty {
         self.keyPath = keyPath
         value = Box(value: nil)
     }
+
+    public func _updateDynamicProperties(with environment: EnvironmentValues, previousValue: Environment<Value>?) {
+        update(with: environment, previousValue: previousValue)
+    }
+
+    public func _observeState() -> [_AnyStateProperty] {
+        []
+    }
 }

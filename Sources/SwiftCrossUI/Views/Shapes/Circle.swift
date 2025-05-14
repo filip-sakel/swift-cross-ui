@@ -1,3 +1,4 @@
+@Shape
 public struct Circle: Shape {
     public init() {}
 

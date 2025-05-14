@@ -2,6 +2,7 @@
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView1<View0: View>: TypeSafeView, View {
     public typealias Content = EmptyView
 
@@ -82,6 +83,7 @@ public struct TupleView1<View0: View>: TypeSafeView, View {
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView2<View0: View, View1: View>: TypeSafeView, View {
     public typealias Content = EmptyView
 
@@ -178,6 +180,7 @@ public struct TupleView2<View0: View, View1: View>: TypeSafeView, View {
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView3<View0: View, View1: View, View2: View>: TypeSafeView, View {
     public typealias Content = EmptyView
 
@@ -290,6 +293,7 @@ public struct TupleView3<View0: View, View1: View, View2: View>: TypeSafeView, V
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView4<View0: View, View1: View, View2: View, View3: View>: TypeSafeView, View {
     public typealias Content = EmptyView
 
@@ -418,6 +422,7 @@ public struct TupleView4<View0: View, View1: View, View2: View, View3: View>: Ty
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView5<View0: View, View1: View, View2: View, View3: View, View4: View>:
     TypeSafeView, View
 {
@@ -564,6 +569,7 @@ public struct TupleView5<View0: View, View1: View, View2: View, View3: View, Vie
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView6<
     View0: View, View1: View, View2: View, View3: View, View4: View, View5: View
 >: TypeSafeView, View {
@@ -729,6 +735,7 @@ public struct TupleView6<
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView7<
     View0: View, View1: View, View2: View, View3: View, View4: View, View5: View, View6: View
 >: TypeSafeView, View {
@@ -910,6 +917,7 @@ public struct TupleView7<
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView8<
     View0: View, View1: View, View2: View, View3: View, View4: View, View5: View, View6: View,
     View7: View
@@ -1108,6 +1116,7 @@ public struct TupleView8<
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView9<
     View0: View, View1: View, View2: View, View3: View, View4: View, View5: View, View6: View,
     View7: View, View8: View
@@ -1324,6 +1333,7 @@ public struct TupleView9<
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct TupleView10<
     View0: View, View1: View, View2: View, View3: View, View4: View, View5: View, View6: View,
     View7: View, View8: View, View9: View

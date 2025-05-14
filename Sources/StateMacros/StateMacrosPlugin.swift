@@ -4,7 +4,8 @@ import SwiftSyntaxMacros
 struct StateMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         DynamicPropertyMacro.self,
-        ViewMacro.self
-        // DynamicPropertyContainerMacro.self,
+        ViewMacro.self,
+        ShapeMacro.self,
+        AppMacro.self,
     ]
 }

@@ -4,6 +4,7 @@ extension View {
     }
 }
 
+@View
 struct CornerRadiusModifier<Content: View>: View {
     var body: Content
     var cornerRadius: Int

@@ -77,11 +77,7 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
 
         let viewEnvironment = updateEnvironment(environment)
 
-        updateDynamicProperties(
-            of: view,
-            previousValue: nil,
-            environment: viewEnvironment
-        )
+        view._updateDynamicProperties(with: viewEnvironment, previousValue: nil)
 
         let children = view.children(
             backend: backend,
@@ -97,35 +93,15 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         )
         _widget = widget
 
-        let tag = String(String(describing: NodeView.self).split(separator: "<")[0])
+        let tag = String(NodeView._name().split(separator: "<")[0])
         backend.tag(widget: widget, as: tag)
 
         // Update the view and its children when state changes (children are always updated first).
-        let mirror = Mirror(reflecting: view)
-        for property in mirror.children {
-            if property.label == "state" && property.value is ObservableObject {
-                print(
-                    """
-
-                    warning: The View.state protocol requirement has been removed in favour of
-                             SwiftUI-style @State annotations. Decorate \(NodeView.self).state
-                             with the @State property wrapper to restore previous behaviour.
-
-                    """
-                )
+        let cancellables = view._observeState().map { state in
+            state.didChange.observeAsUIUpdater(backend: backend) { [weak self] in
+                guard let self = self else { return }
+                self.bottomUpUpdate()
             }
-
-            guard let value = property.value as? StateProperty else {
-                continue
-            }
-
-            cancellables.append(
-                value.didChange
-                    .observeAsUIUpdater(backend: backend) { [weak self] in
-                        guard let self = self else { return }
-                        self.bottomUpUpdate()
-                    }
-            )
         }
     }
 

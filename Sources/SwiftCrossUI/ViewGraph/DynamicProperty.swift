@@ -3,13 +3,28 @@
 /// to implement this protocol's non-mutable methods if required. This
 /// protocol avoids mutation to allow state properties and such to be
 /// captured even though views are structs.
-public protocol DynamicProperty: _DynamicPropertyContainer {
+public protocol DynamicProperty {
     /// Updates the property. Called by SwiftCrossUI before every access it
     /// makes to an ``App/body`` or ``View/body``.
     func update(
         with environment: EnvironmentValues,
         previousValue: Self?
     )
+
+    /// Update the dynamic properties of a value given a previous instance (if available).
+    /// - Parameters:
+    ///   - environment: The environment to use when updating the properties.
+    ///   - previousValue: The previous value of the dynamic property. This is
+    ///                 used to determine whether the property has changed.
+    func _updateDynamicProperties(
+        with environment: EnvironmentValues,
+        previousValue: Self?
+    )
+
+    /// Publishers to all the state properties that need to be
+    /// observed. This is used to automatically cancel the subscriptions when the 
+    // view is removed from the view graph.
+    func _observeState() -> [_AnyStateProperty]
 }
 
 extension DynamicProperty {

@@ -1,6 +1,7 @@
 /// A divider that expands along the minor axis of the containing stack layout
 /// (or horizontally otherwise). In dark mode it's white with 10% opacity, and
 /// in light mode it's black with 10% opacity.
+@View
 public struct Divider: View {
     @Environment(\.colorScheme) var colorScheme
 

@@ -1,3 +1,4 @@
+@View
 public struct List<SelectionValue: Hashable, RowView: View>: TypeSafeView, View {
     typealias Children = ListViewChildren<PaddingModifierView<RowView>>
 

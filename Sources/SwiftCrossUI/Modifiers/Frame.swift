@@ -37,6 +37,7 @@ extension View {
 }
 
 /// The implementation for the ``View/frame(width:height:)`` view modifier.
+@View
 struct StrictFrameView<Child: View>: TypeSafeView {
     var body: TupleView1<Child>
 
@@ -152,6 +153,7 @@ struct StrictFrameView<Child: View>: TypeSafeView {
 }
 
 /// The implementation for the ``View/frame(width:height:)`` view modifier.
+@View
 struct FlexibleFrameView<Child: View>: TypeSafeView {
     var body: TupleView1<Child>
 

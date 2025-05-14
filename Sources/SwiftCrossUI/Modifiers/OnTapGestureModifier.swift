@@ -35,6 +35,7 @@ extension View {
     }
 }
 
+@View
 struct OnTapGestureModifier<Content: View>: TypeSafeView {
     typealias Children = TupleView1<Content>.Children
 

@@ -9,6 +9,7 @@ extension View {
     }
 }
 
+@View
 struct OnDisappearModifier<Content: View>: View {
     var body: TupleView1<Content>
     var action: () -> Void

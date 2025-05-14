@@ -1,5 +1,6 @@
 /// A view that can be rendered by any backend.
-public protocol View: _DynamicPropertyContainer {
+// FIXME: Just replicate _DynamicPropertyContainer here instead of using it as a protocol constraint
+public protocol View {
     /// The view's content (composed of other views).
     associatedtype Content: View
 
@@ -59,6 +60,21 @@ public protocol View: _DynamicPropertyContainer {
         backend: Backend,
         dryRun: Bool
     ) -> ViewUpdateResult
+
+    /// Update the dynamic properties of a value given a previous instance (if available).
+    /// - Parameters:
+    ///   - environment: The environment to use when updating the properties.
+    ///   - previousValue: The previous value of the dynamic property. This is
+    ///                 used to determine whether the property has changed.
+    func _updateDynamicProperties(
+        with environment: EnvironmentValues,
+        previousValue: Self?
+    )
+
+    /// Publishers to all the state properties that need to be
+    /// observed. This is used to automatically cancel the subscriptions when the 
+    // view is removed from the view graph.
+    func _observeState() -> [_AnyStateProperty]
 
     static func _name() -> String
 }

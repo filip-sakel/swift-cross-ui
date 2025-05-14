@@ -16,6 +16,7 @@ children_type_parameters = ", ".join(["View%d" % j for j in range(i + 1)])
 /// production ready variadic generics.
 ///
 /// Has the same behaviour as ``Group`` when rendered directly.
+@View
 public struct ${view}<${struct_parameters}>: TypeSafeView, View {
     public typealias Content = EmptyView
 

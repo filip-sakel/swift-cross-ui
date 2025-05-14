@@ -1,5 +1,6 @@
 // import Foundation
 
+@View
 public struct ProgressView<Label: View>: View {
     private var label: Label
     private var progress: Double?
@@ -114,6 +115,7 @@ extension ProgressView where Label == Text {
     }
 }
 
+@View(checkBody: false)
 struct ProgressSpinnerView: ElementaryView {
     init() {}
 
@@ -134,6 +136,7 @@ struct ProgressSpinnerView: ElementaryView {
     }
 }
 
+@View(checkBody: false)
 struct ProgressBarView: ElementaryView {
     var value: Double?
 

@@ -5,7 +5,8 @@
 /// are alternate strongly-typed solutions to your problem since
 /// ``AnyView`` has significantly more overhead than strongly
 /// typed views.
-public struct AnyView: TypeSafeView {
+@View
+public struct AnyView: TypeSafeView, View {
     typealias Children = AnyViewChildren
 
     public var body = EmptyView()

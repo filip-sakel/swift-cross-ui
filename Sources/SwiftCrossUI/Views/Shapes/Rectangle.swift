@@ -1,3 +1,4 @@
+@Shape
 public struct Rectangle: Shape {
     public init() {}
 

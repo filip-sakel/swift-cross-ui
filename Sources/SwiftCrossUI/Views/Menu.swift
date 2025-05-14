@@ -2,6 +2,7 @@
 ///
 /// Due to technical limitations, the minimum supported OS's for menu buttons in UIKitBackend
 /// are iOS 14 and tvOS 17.
+@View(checkBody: false)
 public struct Menu {
     public var label: String
     public var items: [MenuItem]

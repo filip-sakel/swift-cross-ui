@@ -10,67 +10,27 @@ public struct DynamicPropertyMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        guard let structDecl = declaration.as(StructDeclSyntax.self) else {
-            throw CustomError("Only structs can use @DynamicProperty.")
-        }
+        let structDecl = try extractStructDecl(from: declaration, macroName: "DynamicProperty")
+        let dynamicProps = extractDynamicProperties(structDecl: structDecl, context: context)
 
-        let memberList = structDecl.memberBlock.members
-        var dynamicProps: [String] = []
-
-        for member in memberList {
-            guard let varDecl = member.decl.as(VariableDeclSyntax.self),
-                  let binding = varDecl.bindings.first,
-                  let identPattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
-                continue
-            }
-
-            let hasWrapperAttr = varDecl.attributes.contains(where: { attr in
-                guard let attrName = attr.as(AttributeSyntax.self)?
-                        .attributeName.as(IdentifierTypeSyntax.self)?
-                        .name.text else { return false }
-                return attrName.first?.isUppercase == true
-            })
-
-            // For property wrappers use the underlying property name not the generated one.
-            // E.g. @State var foo: String -> _foo
-            let namePrefix = hasWrapperAttr ? "_" : ""
-            let name = namePrefix + identPattern.identifier.text
-            dynamicProps.append(name)
-        }
-
-        let envParam = "with environment: EnvironmentValues"
-        let prevParam = "previousValue: Self?"
-        let updateMethod = """
-        public func _updateDynamicProperties(\(envParam), \(prevParam)) {
+        // Create update method
+        let selfUpdateStatement: StmtSyntax = """
             self.update(with: environment, previousValue: previousValue)
-            \(dynamicProps.map {
-                """
-                _processDynamicProperty(self.\($0)) { $0._updateDynamicProperties(with: environment, previousValue: previousValue?.\($0)) }
-                """
-            }.joined(separator: "\n"))
-        }
         """
+        let updateMethod = createUpdateMethod(structDecl: structDecl, prelude: selfUpdateStatement, dynamicProps: dynamicProps, context: context)
 
-        let observeMethod = """
-        public func _observeState() -> [_AnyStateProperty] {
-            var observers: [_AnyStateProperty] = []
-            \(dynamicProps.map {
-                """
-                _processDynamicProperty(self.\($0)) { observers.append(contentsOf: $0._observeState()) }
-                """
-            }.joined(separator: "\n"))
-            return observers
-        }
-        """
+        // Create observe method
+        let observeMethod = createObserveMethod(structDecl: structDecl, dynamicProps: dynamicProps, context: context)
 
-        let ext: DeclSyntax = """
+        // Create extension decl
+        let extDecl: DeclSyntax = """
         extension \(raw: type.trimmed): DynamicProperty {
-            \(raw: updateMethod)
-            \(raw: observeMethod)
+            \(updateMethod)
+            \(observeMethod)
         }
         """
 
-        return [ExtensionDeclSyntax(ext)!]
+        return [ExtensionDeclSyntax(extDecl)!]
     }
 }
 

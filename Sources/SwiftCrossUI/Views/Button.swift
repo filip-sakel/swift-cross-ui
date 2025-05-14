@@ -1,4 +1,5 @@
 /// A control that initiates an action.
+@View(checkBody: false)
 public struct Button: ElementaryView, View {
     /// The label to show on the button.
     package var label: String

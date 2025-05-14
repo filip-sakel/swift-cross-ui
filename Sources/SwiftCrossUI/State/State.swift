@@ -95,7 +95,7 @@ extension State: StateProperty {
     }
 }
 
-extension State: _DynamicPropertyContainer {
+extension State {
     public func _updateDynamicProperties(with environment: EnvironmentValues, previousValue: State<Value>?) {
         update(with: environment, previousValue: previousValue)
     }
@@ -115,14 +115,25 @@ protocol StateProperty {
 
 /// A type-erased wrapper for a state property.
 public struct _AnyStateProperty: StateProperty {
-    var didChange: Publisher
-    var snapshot: () throws -> Data?
-    var tryRestoreFromSnapshot: (Data) -> Void
+    private let _didChange: Publisher
+    private let _snapshot: () throws -> Data?
+    private let _tryRestoreFromSnapshot: (Data) -> Void
 
     init<P: StateProperty>(_ property: P) {
-        self.didChange = property.didChange
-        self.snapshot = { try property.snapshot() }
-        self.tryRestoreFromSnapshot = { property.tryRestoreFromSnapshot($0) }
+        self._didChange = property.didChange
+        self._snapshot = { try property.snapshot() }
+        self._tryRestoreFromSnapshot = { property.tryRestoreFromSnapshot($0) }
+    }
+
+    var didChange: Publisher {
+        _didChange
+    }
+    func snapshot() throws -> Data? {
+        try _snapshot()
+    }
+
+    func tryRestoreFromSnapshot(_ snapshot: Data) {
+        _tryRestoreFromSnapshot(snapshot)
     }
 }
 

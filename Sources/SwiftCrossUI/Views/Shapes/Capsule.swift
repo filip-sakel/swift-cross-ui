@@ -1,4 +1,5 @@
 /// A rounded rectangle whose corner radius is equal to half the length of its shortest side.
+@Shape
 public struct Capsule: Shape {
     public init() {}
 

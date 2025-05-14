@@ -1,5 +1,6 @@
 /// A view that groups views together without affecting their layout (allowing
 /// modifiers to be applied to a whole group of views at once).
+@View
 public struct Group<Content: View>: View {
     public var body: Content
 

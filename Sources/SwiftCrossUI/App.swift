@@ -1,7 +1,7 @@
 // // import Foundation
 
 /// An application.
-public protocol App: _DynamicPropertyContainer {
+public protocol App {
     /// The backend used to render the app.
     associatedtype Backend: AppBackend
     /// The type of scene representing the content of the app.
@@ -20,6 +20,21 @@ public protocol App: _DynamicPropertyContainer {
 
     /// Creates an instance of the app.
     init()
+
+    /// Update the dynamic properties of a value given a previous instance (if available).
+    /// - Parameters:
+    ///   - environment: The environment to use when updating the properties.
+    ///   - previousValue: The previous value of the dynamic property. This is
+    ///                 used to determine whether the property has changed.
+    func _updateDynamicProperties(
+        with environment: EnvironmentValues,
+        previousValue: Self?
+    )
+
+    /// Publishers to all the state properties that need to be
+    /// observed. This is used to automatically cancel the subscriptions when the 
+    // view is removed from the view graph.
+    func _observeState() -> [_AnyStateProperty]
 }
 
 /// Force refresh the entire scene graph. Used by hot reloading. If you need to do

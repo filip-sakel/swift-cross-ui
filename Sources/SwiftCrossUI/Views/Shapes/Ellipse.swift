@@ -1,3 +1,4 @@
+@Shape
 public struct Ellipse: Shape {
     public init() {}
 

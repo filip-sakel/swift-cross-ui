@@ -1,4 +1,5 @@
 /// An RGBA representation of a color.
+@View(checkBody: false)
 public struct Color {
     /// The red component (from 0 to 1).
     public var red: Float

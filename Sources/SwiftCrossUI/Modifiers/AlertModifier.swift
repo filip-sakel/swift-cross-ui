@@ -13,6 +13,7 @@ extension View {
     }
 }
 
+@View
 struct AlertModifierView<Child: View>: TypeSafeView {
     typealias Children = AlertModifierViewChildren<Child>
 

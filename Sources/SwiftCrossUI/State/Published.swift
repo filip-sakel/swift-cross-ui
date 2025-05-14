@@ -111,6 +111,7 @@ public final class Published<Value>: ObservableObject, PublishedMarkerProtocol {
     }
 }
 
+#if !hasFeature(Embedded)
 extension Published: Codable where Value: Codable {
     public convenience init(from decoder: Decoder) throws {
         self.init(wrappedValue: try Value(from: decoder))
@@ -120,6 +121,7 @@ extension Published: Codable where Value: Codable {
         try wrappedValue.encode(to: encoder)
     }
 }
+#endif
 
 @available(*, deprecated, message: "Replace Observed with Published")
 public typealias Observed = Published

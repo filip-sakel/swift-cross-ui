@@ -1,4 +1,5 @@
 /// A control for selecting from a set of values.
+@View(checkBody: false)
 public struct Picker<Value: Equatable>: ElementaryView, View {
     /// The options to be offered by the picker.
     private var options: [Value]

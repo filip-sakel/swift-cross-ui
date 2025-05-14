@@ -18,11 +18,22 @@ extension ForEach where Child == [MenuItem] {
     }
 }
 
-extension ForEach: TypeSafeView, View where Child: View {
+extension ForEach: TypeSafeView, View, _DynamicPropertyContainer where Child: View {
     typealias Children = ForEachViewChildren<Items, Child>
 
     public var body: EmptyView {
         return EmptyView()
+    }
+
+    public func _updateDynamicProperties(with environment: EnvironmentValues, previousValue: ForEach<Items, Child>?) {
+        // No op; we don't have any dynamic properties.
+    }
+    public func _observeState() -> [_AnyStateProperty] {
+        // No op; we don't have any state properties.
+        return []
+    }
+    public static func _name() -> String {
+        return "ForEach<Items, \(Child._name())>"
     }
 
     /// Creates a view that creates child views on demand based on a collection of data.

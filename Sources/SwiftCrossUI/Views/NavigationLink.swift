@@ -4,6 +4,7 @@
 ///
 /// Unlike Apples SwiftUI API a `NavigationLink` can be outside of a `NavigationStack`
 /// as long as they share the same `NavigationPath`.
+@View
 public struct NavigationLink: View {
     public var body: some View {
         Button(label) {

@@ -1,4 +1,5 @@
 /// A view that arranges its subviews horizontally.
+@View
 public struct HStack<Content: View>: View {
     public var body: Content
 

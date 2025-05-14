@@ -5,6 +5,7 @@ public protocol StyledShape: Shape {
     var strokeStyle: StrokeStyle? { get }
 }
 
+@Shape
 struct StyledShapeImpl<Base: Shape>: StyledShape {
     var base: Base
     var strokeColor: Color?

@@ -1,5 +1,6 @@
 // import Foundation
 
+@View
 struct SplitView<Sidebar: View, Detail: View>: TypeSafeView, View {
     typealias Children = SplitViewChildren<EnvironmentModifier<Sidebar>, Detail>
 

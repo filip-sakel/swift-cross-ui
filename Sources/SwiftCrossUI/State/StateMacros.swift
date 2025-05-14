@@ -6,8 +6,18 @@ public macro DynamicProperty() =
     #externalMacro(module: "StateMacros", type: "DynamicPropertyMacro")
 
 @attached(extension, conformances: View)
-public macro View() =
+public macro View(checkBody: _const Bool = true) =
     #externalMacro(module: "StateMacros", type: "ViewMacro")
+
+@attached(extension, conformances: App)
+public macro App() =
+    #externalMacro(module: "StateMacros", type: "AppMacro")
+
+@attached(extension, conformances: Shape)
+public macro Shape() =
+    #externalMacro(module: "StateMacros", type: "ShapeMacro")
+
+// FIXME: Attach view builder to body if it's an implicit getter
 
 // public macro _DynamicPropertyContainer() =
 //     #externalMacro(module: "StateMacros", type: "DynamicPropertyContainerMacro")
@@ -43,24 +53,6 @@ public func _getGenericParameterViewNameOrDefault<T: View>(_ type: T.Type, name:
     type._name()
 }
 
-// enum _DynamicPropertyProxy<T> {
-//     case empty 
-//     case dynamicProp(
-//         _updateDynamicPropertie: (_ environment: EnvironmentValues, _ previousValue: T?) -> Void,
-//         _observeState: () -> [_AnyStateProperty])
-//     init(_ prop: T) {
-//         self = .empty
-//     }
-
-//     init(_ prop: T) where T: DynamicProperty {
-//         self = .dynamicProp(
-//             _updateDynamicPropertie: prop._updateDynamicProperties,
-//             _observeState: prop._observeState)
-//     }
-// }
-
-
-
 @DynamicProperty
 struct MyDynProp {
     let value: String
@@ -76,5 +68,19 @@ struct MyView<T: View, U> {
     var body: some View {
         Text("Hello, world!")
         .padding()
+    }
+}
+
+@View(checkBody: false)
+struct MyView2<T: View, U>: ElementaryView {
+    @State var state: String
+    let name: String 
+    let state2: State<String>
+
+    func update<Backend>(_ widget: Backend.Widget, proposedSize: SIMD2<Int>, environment: EnvironmentValues, backend: Backend, dryRun: Bool) -> ViewUpdateResult where Backend : AppBackend {
+        fatalError()   
+    }
+    func asWidget<Backend>(backend: Backend) -> Backend.Widget where Backend : AppBackend {
+        fatalError()
     }
 }

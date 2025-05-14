@@ -52,11 +52,10 @@ public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
         }
 
         private static func updateState<V: View>(of view: V, withSnapshot state: [String: Data]) {
-            let mirror = Mirror(reflecting: view)
-            for property in mirror.children {
+            let states = view._observeState()
+            for stateProperty in states {
                 guard
-                    let stateProperty = property as? StateProperty,
-                    let propertyName = property.label,
+                    let propertyName = stateProperty._name(),
                     let encodedState = state[propertyName]
                 else {
                     continue
@@ -76,12 +75,11 @@ public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
 
     public static func snapshot<V: View>(of node: AnyViewGraphNode<V>) -> NodeSnapshot {
         var stateSnapshot: [String: Data] = [:]
-        let mirror = Mirror(reflecting: node.getView())
-        for property in mirror.children {
+        let stateProperties = node.getStateProperties()
+        for stateProperty in stateProperties {
             guard
-                let propertyName = property.label,
-                let property = property as? StateProperty,
-                let encodedState = try? property.snapshot()
+                let propertyName = stateProperty._name(),
+                let encodedState = try? stateProperty.snapshot()
             else {
                 continue
             }

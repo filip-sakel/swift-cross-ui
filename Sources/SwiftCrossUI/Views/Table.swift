@@ -1,4 +1,5 @@
 /// A container that presents rows of data arranged in columns.
+@View
 public struct Table<RowValue, RowContent: TableRowContent<RowValue>>: TypeSafeView, View {
     typealias Children = TableViewChildren<RowContent.RowContent>
 

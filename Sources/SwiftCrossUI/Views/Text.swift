@@ -1,4 +1,5 @@
 /// A text view.
+@View(checkBody: false)
 public struct Text: ElementaryView, View {
     /// The string to be shown in the text view.
     var string: String

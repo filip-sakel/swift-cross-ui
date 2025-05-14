@@ -2,6 +2,7 @@
 ///
 /// This is not necessarily four line segments and four circular arcs. If possible, this shape
 /// uses smoother curves to make the transition between the edges and corners less abrupt.
+@Shape
 public struct RoundedRectangle: Shape {
     public var cornerRadius: Double
 

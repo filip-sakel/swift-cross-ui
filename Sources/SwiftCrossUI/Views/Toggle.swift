@@ -1,3 +1,4 @@
+@View
 public struct Toggle: View {
     @Environment(\.backend) var backend
 
