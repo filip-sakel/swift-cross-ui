@@ -15,9 +15,15 @@ public struct DynamicPropertyMacro: ExtensionMacro {
 
         // Create update method
         let selfUpdateStatement: StmtSyntax = """
-            self.update(with: environment, previousValue: previousValue)
+            self.update(with: environment, propertyName: propertyName, previousValue: previousValue)
         """
-        let updateMethod = createUpdateMethod(structDecl: structDecl, prelude: selfUpdateStatement, dynamicProps: dynamicProps, context: context)
+        let updateMethod = createUpdateMethod(
+            structDecl: structDecl, 
+            prelude: selfUpdateStatement,
+            acceptsSourceName: true,
+            dynamicProps: dynamicProps, 
+            context: context
+        )
 
         // Create observe method
         let observeMethod = createObserveMethod(structDecl: structDecl, dynamicProps: dynamicProps, context: context)

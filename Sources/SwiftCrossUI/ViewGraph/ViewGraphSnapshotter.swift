@@ -75,10 +75,10 @@ public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
 
     public static func snapshot<V: View>(of node: AnyViewGraphNode<V>) -> NodeSnapshot {
         var stateSnapshot: [String: Data] = [:]
-        let stateProperties = node.getStateProperties()
-        for stateProperty in stateProperties {
+        let stateProperties = node.getView()._observeState()
+        for stateProperty: _AnyStateProperty in stateProperties {
             guard
-                let propertyName = stateProperty._name(),
+                let propertyName = stateProperty._name,
                 let encodedState = try? stateProperty.snapshot()
             else {
                 continue

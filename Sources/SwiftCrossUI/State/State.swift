@@ -11,6 +11,7 @@ public struct State<Value>: DynamicProperty {
         // updates.
         var box: Box<Value>
         var didChange = Publisher()
+        var name: String = ""
 
         init(_ value: Value) {
             self.box = Box(value: value)
@@ -56,15 +57,21 @@ public struct State<Value>: DynamicProperty {
         }
     }
 
-    public func update(with environment: EnvironmentValues, previousValue: State<Value>?) {
+    public func update(with environment: EnvironmentValues, propertyName: String, previousValue: State<Value>?) {
         if let previousValue {
             storage.box = previousValue.storage.box
+            precondition(propertyName == previousValue.storage.name, "State property name mismatch")
+            storage.name = propertyName
             storage.didChange = previousValue.storage.didChange
         }
     }
 }
 
 extension State: StateProperty {
+    var name: String {
+        storage.name
+    }
+
     func tryRestoreFromSnapshot(_ snapshot: Data) {
         #if !hasFeature(Embedded)
         guard
@@ -96,8 +103,8 @@ extension State: StateProperty {
 }
 
 extension State {
-    public func _updateDynamicProperties(with environment: EnvironmentValues, previousValue: State<Value>?) {
-        update(with: environment, previousValue: previousValue)
+    public func _updateDynamicProperties(with environment: EnvironmentValues, propertyName: String, previousValue: State<Value>?) {
+        update(with: environment, propertyName: propertyName, previousValue: previousValue)
     }
 
     public func _observeState() -> [_AnyStateProperty] {
@@ -111,18 +118,26 @@ protocol StateProperty {
     var didChange: Publisher { get }
     func tryRestoreFromSnapshot(_ snapshot: Data)
     func snapshot() throws -> Data?
+
+    var name: String { get }
 }
 
 /// A type-erased wrapper for a state property.
 public struct _AnyStateProperty: StateProperty {
+    private let _name: String
     private let _didChange: Publisher
     private let _snapshot: () throws -> Data?
     private let _tryRestoreFromSnapshot: (Data) -> Void
 
     init<P: StateProperty>(_ property: P) {
+        self._name = property.name
         self._didChange = property.didChange
         self._snapshot = { try property.snapshot() }
         self._tryRestoreFromSnapshot = { property.tryRestoreFromSnapshot($0) }
+    }
+
+    var name: String {
+        _name
     }
 
     var didChange: Publisher {

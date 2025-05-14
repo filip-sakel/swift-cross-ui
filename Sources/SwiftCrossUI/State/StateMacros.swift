@@ -25,7 +25,7 @@ public macro Shape() =
 
 public struct _EmptyDynamicProperty {
     // To allow passing in previousValue?.value
-    public func _updateDynamicProperties<T>(with environment: EnvironmentValues, previousValue: T?) {}
+    public func _updateDynamicProperties<T>(with environment: EnvironmentValues, propertyName: String, previousValue: T?) {}
 
     // To match DynamicProperty protocol
     public func _observeState() -> [_AnyStateProperty] { [] }
@@ -61,8 +61,8 @@ struct MyDynProp {
 
 @View
 struct MyView<T: View, U> {
-    @State var state: String
     let name: String 
+    @State var state: String
     let state2: State<String>
 
     var body: some View {
@@ -74,8 +74,8 @@ struct MyView<T: View, U> {
 @View(checkBody: false)
 struct MyView2<T: View, U>: ElementaryView {
     @State var state: String
-    let name: String 
     let state2: State<String>
+    let name: String 
 
     func update<Backend>(_ widget: Backend.Widget, proposedSize: SIMD2<Int>, environment: EnvironmentValues, backend: Backend, dryRun: Bool) -> ViewUpdateResult where Backend : AppBackend {
         fatalError()   

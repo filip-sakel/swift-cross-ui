@@ -8,6 +8,7 @@ public protocol DynamicProperty {
     /// makes to an ``App/body`` or ``View/body``.
     func update(
         with environment: EnvironmentValues,
+        propertyName: String,
         previousValue: Self?
     )
 
@@ -18,6 +19,7 @@ public protocol DynamicProperty {
     ///                 used to determine whether the property has changed.
     func _updateDynamicProperties(
         with environment: EnvironmentValues,
+        propertyName: String,
         previousValue: Self?
     )
 

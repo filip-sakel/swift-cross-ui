@@ -82,7 +82,7 @@ func createObserveMethod(structDecl: StructDeclSyntax, dynamicProps: [String], c
             var observers: [_AnyStateProperty] = []
             \(raw: dynamicProps.map {
                 """
-                _processDynamicProperty(self.\($0)) { observers.append(contentsOf: $0._observeState()) }
+                    _processDynamicProperty(self.\($0)) { observers.append(contentsOf: $0._observeState()) }
                 """
             }.joined(separator: "\n"))
             return observers
@@ -92,15 +92,26 @@ func createObserveMethod(structDecl: StructDeclSyntax, dynamicProps: [String], c
     return observeMethod
 }
 
-func createUpdateMethod(structDecl: StructDeclSyntax, prelude: StmtSyntax? = nil, dynamicProps: [String], context: some MacroExpansionContext) -> DeclSyntax {
+func createUpdateMethod(structDecl: StructDeclSyntax, prelude: StmtSyntax? = nil, acceptsSourceName: Bool, dynamicProps: [String], context: some MacroExpansionContext) -> DeclSyntax {
     let envParam = "with environment: EnvironmentValues"
     let prevParam = "previousValue: Self?"
+
+    let sourceParam = acceptsSourceName ? "propertyName: String, " : ""
+
+    let sourceName: ExprSyntax = acceptsSourceName ? #"(propertyName + ".") + "# : ""
+
     let updateMethod: DeclSyntax = """
-        public func _updateDynamicProperties(\(raw: envParam), \(raw: prevParam)) {
+        public func _updateDynamicProperties(\(raw: envParam),\(raw:sourceParam)\(raw: prevParam)) {
             \(prelude)
             \(raw: dynamicProps.map {
                 """
-                    _processDynamicProperty(self.\($0)) { $0._updateDynamicProperties(with: environment, previousValue: previousValue?.\($0)) }
+                    _processDynamicProperty(self.\($0)) { 
+                        $0._updateDynamicProperties(
+                            with: environment, 
+                            propertyName: \(sourceName)"\($0)", 
+                            previousValue: previousValue?.\($0)
+                        ) 
+                    }
                 """
             }.joined(separator: "\n"))
         }
@@ -118,7 +129,13 @@ func createDynamicPropertyExtension(
     let structDecl = try extractStructDecl(from: typeDecl, macroName: protocolName)
     let dynamicProps = extractDynamicProperties(structDecl: structDecl, context: context)
 
-    let updateMethod = createUpdateMethod(structDecl: structDecl, dynamicProps: dynamicProps, context: context)
+    let updateMethod = createUpdateMethod(
+        structDecl: structDecl, 
+        // Containers don't have a "sourceName"; they're the source.
+        acceptsSourceName: false, 
+        dynamicProps: dynamicProps, 
+        context: context
+    )
     let observeMethod = createObserveMethod(structDecl: structDecl, dynamicProps: dynamicProps, context: context)
     let nameMethod = createNameMember(structDecl: structDecl, type: type, context: context)
 

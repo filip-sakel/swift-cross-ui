@@ -97,7 +97,7 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         backend.tag(widget: widget, as: tag)
 
         // Update the view and its children when state changes (children are always updated first).
-        let cancellables = view._observeState().map { state in
+        self.cancellables = view._observeState().map { state in
             state.didChange.observeAsUIUpdater(backend: backend) { [weak self] in
                 guard let self = self else { return }
                 self.bottomUpUpdate()
@@ -229,11 +229,7 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
 
         let viewEnvironment = updateEnvironment(environment)
 
-        updateDynamicProperties(
-            of: view,
-            previousValue: previousView,
-            environment: viewEnvironment
-        )
+        view._updateDynamicProperties(with: viewEnvironment, previousValue: previousView)
 
         if !dryRun {
             backend.show(widget: widget)

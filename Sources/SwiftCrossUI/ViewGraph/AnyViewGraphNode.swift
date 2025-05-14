@@ -19,6 +19,8 @@ public class AnyViewGraphNode<NodeView: View> {
             _ environment: EnvironmentValues,
             _ dryRun: Bool
         ) -> ViewUpdateResult
+    /// The node's state properties
+    private var _observeState: () -> [_AnyStateProperty]
     /// The type-erased getter for the node's widget.
     private var _getWidget: () -> AnyWidget
     /// The type-erased getter for the node's view.
@@ -32,6 +34,7 @@ public class AnyViewGraphNode<NodeView: View> {
     public init<Backend: AppBackend>(_ node: ViewGraphNode<NodeView, Backend>) {
         self.node = node
         _updateWithNewView = node.update(with:proposedSize:environment:dryRun:)
+        _observeState = node.view._observeState
         _getWidget = {
             AnyWidget(node.widget)
         }
@@ -73,6 +76,12 @@ public class AnyViewGraphNode<NodeView: View> {
         dryRun: Bool
     ) -> ViewUpdateResult {
         _updateWithNewView(newView, proposedSize, environment, dryRun)
+    }
+
+    /// Observes the state properties of the node.
+    /// - Returns: The state properties of the node.
+    public func observeState() -> [_AnyStateProperty] {
+        _observeState()
     }
 
     /// Gets the node's wrapped view.
