@@ -1,7 +1,7 @@
-import Foundation
+// // import Foundation
 
 /// An application.
-public protocol App {
+public protocol App: _DynamicPropertyContainer {
     /// The backend used to render the app.
     associatedtype Backend: AppBackend
     /// The type of scene representing the content of the app.
@@ -30,6 +30,25 @@ public var _forceRefresh: () -> Void = {}
 private var swiftBundlerAppMetadata: AppMetadata?
 
 /// An error encountered when parsing Swift Bundler metadata.
+#if hasFeature(Embedded)
+private enum SwiftBundlerMetadataError {
+    case jsonNotDictionary(Any)
+    case missingAppIdentifier
+    case missingAppVersion
+
+    var errorDescription: String? {
+        switch self {
+            case .jsonNotDictionary:
+                "Root metadata JSON value wasn't an object"
+            case .missingAppIdentifier:
+                "Missing 'appIdentifier' (of type String)"
+            case .missingAppVersion:
+                "Missing 'appVersion' (of type String)"
+        }
+    }
+}
+#else
+@_unavailableInEmbedded
 private enum SwiftBundlerMetadataError: LocalizedError {
     case jsonNotDictionary(Any)
     case missingAppIdentifier
@@ -46,6 +65,7 @@ private enum SwiftBundlerMetadataError: LocalizedError {
         }
     }
 }
+#endif
 
 extension App {
     /// Metadata loaded at app start up.
@@ -68,6 +88,9 @@ extension App {
     }
 
     private static func extractSwiftBundlerMetadata() -> AppMetadata? {
+#if hasFeature(Embedded)
+            return nil
+#else
         guard let executable = Bundle.main.executableURL else {
             print("warning: No executable url")
             return nil
@@ -116,6 +139,7 @@ extension App {
             print("  -> \(error)")
             return nil
         }
+#endif
     }
 
     private static func parseBigEndianUInt64(

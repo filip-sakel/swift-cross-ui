@@ -1,5 +1,5 @@
 #if !os(WASI)
-    import Foundation
+    // import Foundation
 #endif
 
 /// A scene that presents a group of identically structured windows. Currently

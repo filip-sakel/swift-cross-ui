@@ -3,13 +3,81 @@
 /// to implement this protocol's non-mutable methods if required. This
 /// protocol avoids mutation to allow state properties and such to be
 /// captured even though views are structs.
-public protocol DynamicProperty {
+public protocol DynamicProperty: _DynamicPropertyContainer {
     /// Updates the property. Called by SwiftCrossUI before every access it
     /// makes to an ``App/body`` or ``View/body``.
     func update(
         with environment: EnvironmentValues,
         previousValue: Self?
     )
+}
+
+extension DynamicProperty {
+    /// Updates the property. Called by SwiftCrossUI before every access it
+    /// makes to an ``App/body`` or ``View/body``.
+    /// A no-op by default.
+    public func update(
+        with environment: EnvironmentValues,
+        previousValue: Self?
+    ) {}
+}
+
+public protocol _DynamicPropertyContainer {
+    /// Update the dynamic properties of a value given a previous instance (if available).
+    /// - Parameters:
+    ///   - environment: The environment to use when updating the properties.
+    ///   - previousValue: The previous value of the dynamic property. This is
+    ///                 used to determine whether the property has changed.
+    func _updateDynamicProperties(
+        with environment: EnvironmentValues,
+        previousValue: Self?
+    )
+
+    /// Publishers to all the state properties that need to be
+    /// observed. This is used to automatically cancel the subscriptions when the 
+    // view is removed from the view graph.
+    func _observeState() -> [_AnyStateProperty]
+}
+
+#if !hasFeature(Embedded)
+extension _DynamicPropertyContainer {
+    func _updateDynamicProperties(
+        with environment: EnvironmentValues,
+        previousValue: Self?
+    ) -> [Publisher] {
+        updateDynamicProperties(
+            of: self,
+            previousValue: previousValue,
+            environment: environment
+        )
+    }
+
+    func _observeState() -> [AnyStateProperty] {
+        let mirror = Mirror(reflecting: self)
+        var states: [AnyStateProperty] = []
+
+        for property in mirror.children {
+            if property.label == "state" && property.value is ObservableObject {
+                print(
+                    """
+
+                    warning: The App.state protocol requirement has been removed in favour of
+                                SwiftUI-style @State annotations. Decorate \(AppRoot.self).state
+                                with the @State property wrapper to restore previous behaviour.
+
+                    """
+                )
+            }
+
+            guard let value = property.value as? StateProperty else {
+                continue
+            }
+
+            states.append(value.erased())
+        }
+
+        return statePublishers
+    }
 }
 
 /// Updates the dynamic properties of a value given a previous instance of the
@@ -21,6 +89,7 @@ func updateDynamicProperties<T>(
 ) {
     let newMirror = Mirror(reflecting: value)
     let previousMirror = previousValue.map(Mirror.init(reflecting:))
+
     if let previousChildren = previousMirror?.children {
         let propertySequence = zip(newMirror.children, previousChildren)
         for (newProperty, previousProperty) in propertySequence {
@@ -90,3 +159,5 @@ private func updateDynamicProperty<Property: DynamicProperty>(
         previousValue: castedPreviousProperty
     )
 }
+
+#endif

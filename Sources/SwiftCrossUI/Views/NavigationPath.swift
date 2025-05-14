@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 /// A type-erased list of data representing the content of a navigation stack.
 ///
@@ -71,6 +71,13 @@ public struct NavigationPath {
         storage.encodedEntries.removeAll()
     }
 
+    #if hasFeature(Embedded)
+
+    func path(destinationTypes: [any Codable.Type]) -> [any Codable] {
+        // FIXME: Actually implement some form of decoding
+        []
+    }
+    #else
     /// Gets the path's current entries. If the path was decoded from a stored representation and
     /// has not been used by a ``NavigationStack`` yet, the ``destinationTypes`` will be used to
     /// decode all elements in the path. Without knowing the ``destinationTypes``, the entries
@@ -112,8 +119,10 @@ public struct NavigationPath {
 
         return storage.path
     }
+    #endif
 }
 
+#if !hasFeature(Embedded)
 extension NavigationPath: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -148,3 +157,4 @@ extension NavigationPath: Codable {
         try container.encode(entries)
     }
 }
+#endif

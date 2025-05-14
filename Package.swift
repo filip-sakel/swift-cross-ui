@@ -78,6 +78,9 @@ let package = Package(
         // .library(name: "LVGLBackend", type: libraryType, targets: ["LVGLBackend"]),
     ],
     dependencies: [
+        // .package(name: "swift-image-formats", path: "../swift-image-formats"),
+
+
         .package(
             url: "https://github.com/CoreOffice/XMLCoder",
             from: "0.17.1"
@@ -125,10 +128,18 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "_EmbdeddedShims",
+            swiftSettings: [
+                .enableExperimentalFeature("Embedded"),
+            ]
+        ),
+        .target(
             name: "SwiftCrossUI",
             dependencies: [
+                "_EmbdeddedShims",
                 "HotReloadingMacrosPlugin",
-                .product(name: "ImageFormats", package: "swift-image-formats"),
+                "StateMacros",
+                // .product(name: "ImageFormats", package: "swift-image-formats"),
             ],
             exclude: [
                 "Builders/ViewBuilder.swift.gyb",
@@ -138,6 +149,12 @@ let package = Package(
                 "Views/TupleViewChildren.swift.gyb",
                 "Views/TableRowContent.swift.gyb",
                 "Scenes/TupleScene.swift.gyb",
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("Embedded"),
+                .enableExperimentalFeature("Extern"),
+                .enableUpcomingFeature("StrictMemorySafety"),
+                .enableExperimentalFeature("AllowUnsafeAttribute"),
             ]
         ),
         .testTarget(
@@ -226,6 +243,16 @@ let package = Package(
         ),
         .macro(
             name: "HotReloadingMacrosPlugin",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "MacroToolkit", package: "swift-macro-toolkit"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .macro(
+            name: "StateMacros",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),

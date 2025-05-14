@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 /// A backend that can be used to run an app (e.g. Gtk or Qt).
 ///
@@ -602,8 +602,7 @@ extension AppBackend {
 extension AppBackend {
     /// Used by placeholder implementations of backend methods.
     private func todo(_ function: String = #function) -> Never {
-        print("\(type(of: self)): \(function) not implemented")
-        Foundation.exit(1)
+        fatalError("\(type(of: self)): \(function) not implemented")
     }
 
     // MARK: System

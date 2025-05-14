@@ -1,5 +1,5 @@
 /// A view that can be rendered by any backend.
-public protocol View {
+public protocol View: _DynamicPropertyContainer {
     /// The view's content (composed of other views).
     associatedtype Content: View
 
@@ -59,7 +59,17 @@ public protocol View {
         backend: Backend,
         dryRun: Bool
     ) -> ViewUpdateResult
+
+    static func _name() -> String
 }
+
+#if !hasFeature(Embedded) 
+extension View {
+    public func _name() -> String {
+        String(String(describing: Self.self).split(separator: "<")[0])
+    }
+}
+#endif
 
 extension View {
     public func children<Backend: AppBackend>(

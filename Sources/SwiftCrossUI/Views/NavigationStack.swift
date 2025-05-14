@@ -1,3 +1,7 @@
+#if hasFeature(Embedded)
+public typealias Codable = Any;
+#endif
+
 /// Type to indicate the root of the NavigationStack. This is internal to prevent root accidentally showing instead
 /// of a detail view.
 struct NavigationStackRootPath: Codable {}

@@ -1,5 +1,55 @@
-import Dispatch
-import Foundation
+// import Dispatch
+// import Foundation
+import _Concurrency
+
+actor UpdateThrottler {
+    var lastUpdateMergeTime: ContinuousClock.Instant?
+    var exponentiallySmoothedUpdateLength: Duration = .zero
+    private var isProcessing = false
+    private let clock = ContinuousClock()
+
+    func attemptUpdate(
+        backend: some AppBackend,
+        _ closure: @escaping () -> Void
+    ) async {
+        guard !isProcessing else {
+            lastUpdateMergeTime = clock.now
+            return
+        }
+
+        isProcessing = true
+
+        await Task.detached(priority: .userInitiated) {
+            await backend.runInMainThread {
+                let start = self.clock.now
+                closure()
+                let elapsed = self.clock.now.duration(to: start)
+
+                Task { @MainActor in
+                    await self.updateThrottlingMetrics(elapsed: elapsed)
+                }
+            }
+
+            await self.handleThrottling()
+            self.isProcessing = false
+        }.value
+    }
+
+    @MainActor
+    private func updateThrottlingMetrics(elapsed: Duration) {
+        exponentiallySmoothedUpdateLength =
+            (elapsed + exponentiallySmoothedUpdateLength) / 2
+    }
+
+    private func handleThrottling() async {
+        guard let lastMergeTime = lastUpdateMergeTime else { return }
+        let now = clock.now
+        if now.duration(from: lastMergeTime) < .seconds(1) {
+            let throttlingDelay = exponentiallySmoothedUpdateLength * 3 / 2
+            try? await clock.sleep(for: throttlingDelay)
+        }
+    }
+}
 
 /// A type that produces valueless observations.
 public class Publisher {
@@ -90,6 +140,15 @@ public class Publisher {
         backend: Backend,
         action closure: @escaping () -> Void
     ) -> Cancellable {
+#if hasFeature(Embedded) && canImport(_Concurrency)
+        let throttler = UpdateThrottler()
+
+        return observe {
+            _Concurrency.Task {
+                await throttler.attemptUpdate(backend: backend, closure)
+            }
+        }
+#else
         let serialUpdateHandlingQueue = DispatchQueue(
             label: "serial update handling"
         )
@@ -148,5 +207,6 @@ public class Publisher {
                 }
             }
         }
+#endif
     }
 }

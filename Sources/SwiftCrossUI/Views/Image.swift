@@ -1,5 +1,32 @@
-import Foundation
+// import Foundation
+
+#if !hasFeature(Embedded)
 import ImageFormats
+import struct FoundationEssentials.URL
+#else
+// FIXME: Implement
+public enum ImageFormats {
+    public struct Image<T>: Hashable {
+        var width: Int
+        var height: Int
+
+        var bytes: [UInt8] {
+            // Implementation for getting bytes
+            return []
+        }
+
+        static func load(from bytes: [UInt8], usingFileExtension fileExtension: String) throws -> Image {
+            // Implementation for loading image from bytes
+            return Image(width: 0, height: 0)
+        }
+        static func load(from bytes: [UInt8]) throws -> Image {
+            // Implementation for loading image from bytes
+            return Image(width: 0, height: 0)
+        }
+    }
+}
+public typealias RGBA = Void
+#endif
 
 /// A view that displays an image.
 public struct Image: TypeSafeView, View {

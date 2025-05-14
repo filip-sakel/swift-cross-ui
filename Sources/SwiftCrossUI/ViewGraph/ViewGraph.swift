@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 /// The root of the view graph which shadows a root view's structure with extra metadata,
 /// cross-update state persistence, and behind the scenes backend widget handling.

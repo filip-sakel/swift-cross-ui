@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 /// A view which erases the type of its child. Useful in dynamic
 /// use-cases such as hot reloading, but not recommended if there

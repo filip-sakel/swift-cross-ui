@@ -24,10 +24,10 @@ class _App<AppRoot: App> {
     }
 
     func forceRefresh() {
-        updateDynamicProperties(
-            of: self.app,
-            previousValue: nil,
-            environment: self.environment
+        // Update the app's dynamic properties
+        self.app._updateDynamicProperties(
+            with: self.environment,
+            previousValue: nil
         )
 
         self.sceneGraphRoot?.update(
@@ -45,10 +45,10 @@ class _App<AppRoot: App> {
                 defaultEnvironment: baseEnvironment
             )
 
-            updateDynamicProperties(
-                of: self.app,
-                previousValue: nil,
-                environment: self.environment
+            // Update the app's dynamic properties
+            self.app._updateDynamicProperties(
+                with: self.environment,
+                previousValue: nil
             )
 
             let body = self.app.body
@@ -77,32 +77,20 @@ class _App<AppRoot: App> {
             )
             self.sceneGraphRoot = rootNode
 
-            let mirror = Mirror(reflecting: self.app)
-            for property in mirror.children {
-                if property.label == "state" && property.value is ObservableObject {
-                    print(
-                        """
+            // Subscribe to the app's state properties
+            let states = self.app._observeState()
+            self.cancellables = states.map { state in
+                // FIXME: Technically taking a strong reference to self causes a retain cycle
+                // but the app should never be deallocated while the backend is running so this shouldn't
+                // be a problem. We should probably use a weak reference to self here.
+                state.didChange.observeAsUIUpdater(backend: self.backend) {
+                    [self] in
+                    // guard let self = self else { return }
 
-                        warning: The App.state protocol requirement has been removed in favour of
-                                 SwiftUI-style @State annotations. Decorate \(AppRoot.self).state
-                                 with the @State property wrapper to restore previous behaviour.
-
-                        """
-                    )
-                }
-
-                guard let value = property.value as? StateProperty else {
-                    continue
-                }
-
-                let cancellable = value.didChange.observeAsUIUpdater(backend: self.backend) {
-                    [weak self] in
-                    guard let self = self else { return }
-
-                    updateDynamicProperties(
-                        of: self.app,
-                        previousValue: nil,
-                        environment: self.environment
+                    // Update the app's dynamic properties
+                    self.app._updateDynamicProperties(
+                        with: self.environment,
+                        previousValue: nil
                     )
 
                     let body = self.app.body
@@ -114,7 +102,6 @@ class _App<AppRoot: App> {
 
                     self.backend.setApplicationMenu(body.commands.resolve())
                 }
-                self.cancellables.append(cancellable)
             }
         }
     }

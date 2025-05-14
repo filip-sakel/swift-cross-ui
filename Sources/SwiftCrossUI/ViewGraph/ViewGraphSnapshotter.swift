@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
     public struct NodeSnapshot: CustomDebugStringConvertible, Equatable {
@@ -102,7 +102,7 @@ public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
     }
 
     public static func name<V: View>(of viewType: V.Type) -> String {
-        String(String(describing: V.self).split(separator: "<")[0])
+        V._name()
     }
 
     /// Attempts to match a list of snapshots to a list of views. Uses assumptions about

@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 public struct ProgressView<Label: View>: View {
     private var label: Label
@@ -75,6 +75,20 @@ extension ProgressView where Label == EmptyView {
         self.progress = value.map(Double.init)
     }
 }
+
+#if hasFeature(Embedded)
+public final class Progress {
+    public var isIndeterminate: Bool
+    public var fractionCompleted: Double
+
+    public init(isIndeterminate: Bool, fractionCompleted: Double) {
+        self.isIndeterminate = isIndeterminate
+        self.fractionCompleted = fractionCompleted
+    }
+}
+#else
+import class Foundation.Progress
+#endif
 
 extension ProgressView where Label == Text {
     public init(_ label: String) {

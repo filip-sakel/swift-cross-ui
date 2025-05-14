@@ -1,4 +1,4 @@
-import Foundation
+// import Foundation
 
 /// Presents an 'Open file' dialog fit for selecting a single file. Some
 /// backends only allow selecting either files or directories but not both

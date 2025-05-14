@@ -1,4 +1,4 @@
-import Foundation  // for sin and cos
+// // import Foundation  // for sin and cos
 
 public enum StrokeCap {
     /// The stroke ends square exactly at the last point.
@@ -146,6 +146,13 @@ public struct AffineTransform: Equatable, CustomDebugStringConvertible {
     }
 
     public var debugDescription: String {
+#if hasFeature(Embedded)
+        return """
+            [ \(linearTransform.x) \(linearTransform.y) \(translation.x) ]
+            [ \(linearTransform.z) \(linearTransform.w) \(translation.y) ]
+            [ 0.0 0.0 1.0 ]
+            """
+#else
         let numberFormat = "%.5g"
         let a = String(format: numberFormat, linearTransform.x)
         let b = String(format: numberFormat, linearTransform.y)
@@ -167,6 +174,7 @@ public struct AffineTransform: Equatable, CustomDebugStringConvertible {
             [ \(pad(c)) \(pad(d)) \(pad(ty)) ]
             [ \(pad(zero)) \(pad(zero)) \(pad(one)) ]
             """
+#endif
     }
 }
 
