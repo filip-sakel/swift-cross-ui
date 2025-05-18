@@ -1,6 +1,6 @@
 /// The 2d alignment of a view.
 @MainActor
-public struct Alignment: Hashable {
+public struct Alignment: Sendable, Hashable {
     /// Centered in both dimensions.
     public static let center = Self(horizontal: .center, vertical: .center)
 

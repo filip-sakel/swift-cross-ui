@@ -16,11 +16,20 @@ public struct NavigationPath {
             var value: Data
         }
 
+        #if !hasFeature(Embedded)
         /// The current path. If both this and `encodedEntries` are non-empty, the elements in path
         /// were added before the navigation path was even used to render a view. By design they
         /// come after the encodedEntries (because they can only be the result of appending and
         /// maybe popping).
         var path: [any Codable] = []
+        #else
+        /// The current path. If both this and `encodedEntries` are non-empty, the elements in path
+        /// were added before the navigation path was even used to render a view. By design they
+        /// come after the encodedEntries (because they can only be the result of appending and
+        /// maybe popping).
+        var path: [String] = []
+        #endif
+        
         /// Entries that will be encoded when this navigation path is first used by a
         /// ``NavigationStack``. It is not possible to decode the entries without first knowing
         /// what types the path can possibly contain (which only the ``NavigationStack`` will know).
@@ -45,10 +54,22 @@ public struct NavigationPath {
     /// Creates an empty navigation path.
     public init() {}
 
+    #if !hasFeature(Embedded)
     /// Appends a new value to the end of the path.
     public mutating func append<C: Codable>(_ component: C) {
         storage.path.append(component)
     }
+    #else
+    /// Appends a new value to the end of the path.
+    public mutating func append(_ component: String) {
+        storage.encodedEntries.append(
+            Storage.EncodedEntry(
+                type: component,
+                value: Data()
+            )
+        )
+    }
+    #endif
 
     /// Removes values from the end of this path.
     ///

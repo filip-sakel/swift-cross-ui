@@ -22,12 +22,12 @@ public struct PresentAlertAction {
                     backend.updateAlert(
                         alert,
                         title: title,
-                        actionLabels: actions.map(\.label),
+                        actionLabels: actions.map { $0.label },
                         environment: environment
                     )
                     let window: Backend.Window? =
                         if let window = environment.window {
-                            .some(window as! Backend.Window)
+                            .some(window.into(Backend.Window.self))
                         } else {
                             nil
                         }

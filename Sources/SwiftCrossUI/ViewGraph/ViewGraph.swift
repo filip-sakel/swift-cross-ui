@@ -39,6 +39,8 @@ public class ViewGraph<Root: View> {
         backend: Backend,
         environment: EnvironmentValues
     ) {
+        self.backend = backend.erased
+        
         rootNode = AnyViewGraphNode(for: view, backend: backend, environment: environment)
 
         self.view = view

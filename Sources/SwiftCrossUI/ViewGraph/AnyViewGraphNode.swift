@@ -37,7 +37,10 @@ public class AnyViewGraphNode<NodeView: View> {
 
     /// Type-erases a view graph node.
     public init<Backend: AppBackend>(_ nodeRef: ViewGraphNode<NodeView, Backend>, backend: Backend) {
-        precondition(nodeRef.value != nil, "Cannot create an AnyViewGraphNode from a nil node")
+        // FIXME: This is a bit of a hack because of a compiler bug with NonCopyable types.
+        guard nodeRef.value != nil else {
+            fatalError("Cannot create an AnyViewGraphNode from a nil node")
+        }
 
         _updateWithNewView = { view, proposedSize, environment, dryRun in
             nodeRef.value!.update(

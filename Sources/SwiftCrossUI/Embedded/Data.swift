@@ -2656,56 +2656,56 @@ public struct Data : Equatable, Hashable, RandomAccessCollection, MutableCollect
         }
     }
 
-    // slightly faster paths for common sequences
-    @inlinable // This is @inlinable as an important generic funnel point, despite being a non-trivial initializer.
-    public init<S: Sequence>(_ elements: S) where S.Element == UInt8 {
-        // If the sequence is already contiguous, access the underlying raw memory directly.
-        if let contiguous = elements as? ContiguousBytes {
-            _representation = contiguous.withUnsafeBytes { return _Representation($0) }
-            return
-        }
+    // // slightly faster paths for common sequences
+    // @inlinable // This is @inlinable as an important generic funnel point, despite being a non-trivial initializer.
+    // public init<S: Sequence>(_ elements: S) where S.Element == UInt8 {
+    //     // If the sequence is already contiguous, access the underlying raw memory directly.
+    //     if let contiguous = elements as? ContiguousBytes {
+    //         _representation = contiguous.withUnsafeBytes { return _Representation($0) }
+    //         return
+    //     }
 
-        // The sequence might still be able to provide direct access to typed memory.
-        // NOTE: It's safe to do this because we're already guarding on S's element as `UInt8`. This would not be safe on arbitrary sequences.
-        let representation = elements.withContiguousStorageIfAvailable {
-            _Representation(UnsafeRawBufferPointer($0))
-        }
-        if let representation = representation {
-            _representation = representation
-            return
-        }
+    //     // The sequence might still be able to provide direct access to typed memory.
+    //     // NOTE: It's safe to do this because we're already guarding on S's element as `UInt8`. This would not be safe on arbitrary sequences.
+    //     let representation = elements.withContiguousStorageIfAvailable {
+    //         _Representation(UnsafeRawBufferPointer($0))
+    //     }
+    //     if let representation = representation {
+    //         _representation = representation
+    //         return
+    //     }
 
-        // Copy as much as we can in one shot from the sequence.
-        let underestimatedCount = elements.underestimatedCount
-        _representation = _Representation(count: underestimatedCount)
-        var (iter, endIndex): (S.Iterator, Int) = _representation.withUnsafeMutableBytes { buffer in
-            buffer.withMemoryRebound(to: UInt8.self) {
-                elements._copyContents(initializing: $0)
-            }
-        }
-        guard endIndex == _representation.count else {
-            // We can't trap here. We have to allow an underfilled buffer
-            // to emulate the previous implementation.
-            _representation.replaceSubrange(endIndex ..< _representation.endIndex, with: nil, count: 0)
-            return
-        }
+    //     // Copy as much as we can in one shot from the sequence.
+    //     let underestimatedCount = elements.underestimatedCount
+    //     _representation = _Representation(count: underestimatedCount)
+    //     var (iter, endIndex): (S.Iterator, Int) = _representation.withUnsafeMutableBytes { buffer in
+    //         buffer.withMemoryRebound(to: UInt8.self) {
+    //             elements._copyContents(initializing: $0)
+    //         }
+    //     }
+    //     guard endIndex == _representation.count else {
+    //         // We can't trap here. We have to allow an underfilled buffer
+    //         // to emulate the previous implementation.
+    //         _representation.replaceSubrange(endIndex ..< _representation.endIndex, with: nil, count: 0)
+    //         return
+    //     }
 
-        // Append the rest byte-wise, buffering through an InlineData.
-        var buffer = InlineData()
-        while let element = iter.next() {
-            buffer.append(byte: element)
-            if buffer.count == buffer.capacity {
-                buffer.withUnsafeBytes { _representation.append(contentsOf: $0) }
-                buffer.count = 0
-            }
-        }
+    //     // Append the rest byte-wise, buffering through an InlineData.
+    //     var buffer = InlineData()
+    //     while let element = iter.next() {
+    //         buffer.append(byte: element)
+    //         if buffer.count == buffer.capacity {
+    //             buffer.withUnsafeBytes { _representation.append(contentsOf: $0) }
+    //             buffer.count = 0
+    //         }
+    //     }
 
-        // If we've still got bytes left in the buffer (i.e. the loop ended before we filled up the buffer and cleared it out), append them.
-        if buffer.count > 0 {
-            buffer.withUnsafeBytes { _representation.append(contentsOf: $0) }
-            buffer.count = 0
-        }
-    }
+    //     // If we've still got bytes left in the buffer (i.e. the loop ended before we filled up the buffer and cleared it out), append them.
+    //     if buffer.count > 0 {
+    //         buffer.withUnsafeBytes { _representation.append(contentsOf: $0) }
+    //         buffer.count = 0
+    //     }
+    // }
 
     @available(swift, introduced: 4.2)
     @available(swift, deprecated: 5, message: "use `init(_:)` instead")
@@ -2944,6 +2944,7 @@ public struct Data : Equatable, Hashable, RandomAccessCollection, MutableCollect
     @inlinable // This is @inlinable as an important generic funnel point, despite being non-trivial.
     public mutating func append<S: Sequence>(contentsOf elements: S) where S.Element == Element {
         // If the sequence is already contiguous, access the underlying raw memory directly.
+        #if !hasFeature(Embedded)
         if let contiguous = elements as? ContiguousBytes {
             contiguous.withUnsafeBytes {
                 _representation.append(contentsOf: $0)
@@ -2951,6 +2952,7 @@ public struct Data : Equatable, Hashable, RandomAccessCollection, MutableCollect
 
             return
         }
+        #endif // !hasFeature(Embedded)
 
         // The sequence might still be able to provide direct access to typed memory.
         // NOTE: It's safe to do this because we're already guarding on S's element as `UInt8`. This would not be safe on arbitrary sequences.
@@ -3045,12 +3047,14 @@ public struct Data : Equatable, Hashable, RandomAccessCollection, MutableCollect
     @inlinable // This is @inlinable as generic and reasonably small.
     public mutating func replaceSubrange<ByteCollection : Collection>(_ subrange: Range<Index>, with newElements: ByteCollection) where ByteCollection.Iterator.Element == Data.Iterator.Element {
         // If the collection is already contiguous, access the underlying raw memory directly.
+        #if !hasFeature(Embedded)
         if let contiguous = newElements as? ContiguousBytes {
             contiguous.withUnsafeBytes { buffer in
                 _representation.replaceSubrange(subrange, with: buffer.baseAddress, count: buffer.count)
             }
             return
         }
+        #endif
         // The collection might still be able to provide direct access to typed memory.
         // NOTE: It's safe to do this because we're already guarding on ByteCollection's element as `UInt8`. This would not be safe on arbitrary collections.
         let replaced: Void? = newElements.withContiguousStorageIfAvailable { buffer in

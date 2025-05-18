@@ -101,7 +101,7 @@ struct MyView2<T: View, U>: View, ElementaryView {
 @View
 struct MyView3: View {
     @State var state: String
-    static var state2: State<String> = State(wrappedValue: "Hello")
+    // static var state2: State<String> = State(wrappedValue: "Hello")
 
     var body: EmptyView
 

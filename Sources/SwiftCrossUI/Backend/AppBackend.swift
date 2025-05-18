@@ -205,11 +205,11 @@ public protocol AppBackend: Sendable {
 
     /// Opens an external URL in the system browser or app registered for the
     /// URL's protocol.
-    func openExternalURL(_ url: URL) throws
+    func openExternalURL(_ url: URL) throws(SimpleError)
 
     /// Reveals a file in the system's file manager. This opens
     /// the file's enclosing directory and highlighting the file.
-    func revealFile(_ url: URL) throws
+    func revealFile(_ url: URL) throws(SimpleError)
 
     /// Shows a widget after it has been created or updated (may be unnecessary
     /// for some backends). Predominantly used by ``ViewGraphNode`` after
@@ -610,11 +610,11 @@ extension AppBackend {
 
     // MARK: System
 
-    public func openExternalURL(_ url: URL) throws {
+    public func openExternalURL(_ url: URL) throws(SimpleError) {
         todo()
     }
 
-    public func revealFile(_ url: URL) throws {
+    public func revealFile(_ url: URL) throws(SimpleError) {
         todo()
     }
 

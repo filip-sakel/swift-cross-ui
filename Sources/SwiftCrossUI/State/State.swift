@@ -34,6 +34,7 @@ public struct State<Value>: DynamicProperty {
         }
     }
 
+    @MainActor
     public var projectedValue: Binding<Value> {
         // Specifically link the binding to the inner box instead of the outer
         // storage which changes with each view update.
@@ -88,7 +89,7 @@ extension State: StateProperty {
         #endif
     }
 
-    func snapshot() throws -> Data? {
+    func snapshot() throws(SimpleError) -> Data? {
         #if !hasFeature(Embedded)
         if let value = storage.box as? Codable {
             return try JSONEncoder().encode(value)
@@ -117,7 +118,7 @@ extension State {
 protocol StateProperty {
     var didChange: Publisher { get }
     func tryRestoreFromSnapshot(_ snapshot: Data)
-    func snapshot() throws -> Data?
+    func snapshot() throws(SimpleError) -> Data?
 
     var name: String? { get }
 }
@@ -126,13 +127,13 @@ protocol StateProperty {
 public struct _AnyStateProperty: StateProperty {
     private let _name: String?
     private let _didChange: Publisher
-    private let _snapshot: () throws -> Data?
+    private let _snapshot: () throws(SimpleError) -> Data?
     private let _tryRestoreFromSnapshot: (Data) -> Void
 
     init<P: StateProperty>(_ property: P) {
         self._name = property.name
         self._didChange = property.didChange
-        self._snapshot = { try property.snapshot() }
+        self._snapshot = { () throws(SimpleError) -> Data? in try property.snapshot() }
         self._tryRestoreFromSnapshot = { property.tryRestoreFromSnapshot($0) }
     }
 
@@ -143,7 +144,7 @@ public struct _AnyStateProperty: StateProperty {
     var didChange: Publisher {
         _didChange
     }
-    func snapshot() throws -> Data? {
+    func snapshot() throws(SimpleError) -> Data? {
         try _snapshot()
     }
 

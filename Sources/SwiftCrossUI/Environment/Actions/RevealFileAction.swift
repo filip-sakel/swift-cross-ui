@@ -12,7 +12,7 @@ public struct RevealFileAction {
         }
 
         action = { @MainActor file in
-            do {
+            do throws(SimpleError) {
                 try backend.revealFile(file)
             } catch {
                 print("warning: Failed to reveal file: \(error)")

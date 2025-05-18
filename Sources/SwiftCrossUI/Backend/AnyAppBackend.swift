@@ -1,3 +1,14 @@
+#if hasFeature(Embedded)
+public struct SimpleError: Error {
+    public let message: String
+    public init(_ message: String) {
+        self.message = message
+    }
+}
+#else
+public typealias SimpleError = any Error
+#endif
+
 @MainActor
 public struct _UnsafeAnyAppBackend: AppBackend {
     public var erased: _UnsafeAnyAppBackend  { self }
@@ -11,6 +22,10 @@ public struct _UnsafeAnyAppBackend: AppBackend {
             self.init(_unsafeType: _UnsafeAnyType(window))
         }
         subscript<T>(_ type: T.Type) -> T {
+            _window[T.self]
+        }
+
+        func into<T>(_ type: T.Type = T.self) -> T {
             _window[T.self]
         }
     }

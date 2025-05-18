@@ -192,9 +192,16 @@ final class _ImageChildren: ViewGraphNodeChildren {
     var isContainerEmpty = true
     var lastScaleFactor: Double = 1
 
-    init<Backend: AppBackend>(backend: Backend) {
-        container = AnyWidget(backend.createContainer())
-        imageWidget = AnyWidget(backend.createImageView())
+    private init(container: AnyWidget, imageWidget: AnyWidget) {
+        self.container = container
+        self.imageWidget = imageWidget
+    }
+    
+    convenience init<Backend: AppBackend>(backend: Backend) {
+        self.init(
+            container: AnyWidget(backend.createContainer()), 
+            imageWidget: AnyWidget(backend.createImageView())
+        )
     }
 
     var widgets: [AnyWidget] = []

@@ -8,9 +8,9 @@ public struct OpenURLAction {
     @MainActor
     init<Backend: AppBackend>(backend: Backend) {
         action = { url in
-            do {
+            do throws(SimpleError) {
                 try backend.openExternalURL(url)
-            } catch {
+            } catch(let error) {
                 print("warning: Failed to open external url: \(error)")
             }
         }

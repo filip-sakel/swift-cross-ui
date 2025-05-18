@@ -49,7 +49,7 @@ public struct EnvironmentValues {
     package var listStyle: ListStyle
 
     // Backing storage for extensible subscript
-    private var extraValues: [ObjectIdentifier: Any]
+    private var extraValues: [ObjectIdentifier: _UnsafeAnyType]
 
     public subscript<T: EnvironmentKey>(_ key: T.Type) -> T.Value {
         get {
@@ -57,6 +57,12 @@ public struct EnvironmentValues {
         }
         set {
             extraValues[ObjectIdentifier(T.self)] = newValue
+        }
+    }
+
+    struct Hello {
+        var hello: ObjectIdentifier {
+            ObjectIdentifier(Hello.self)
         }
     }
 

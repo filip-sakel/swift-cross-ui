@@ -29,6 +29,7 @@ public struct Binding<Value> {
     }
 
     /// Projects a property of a binding.
+    @MainActor
     public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T> & Sendable) -> Binding<T> {
         get {
             Binding<T>(

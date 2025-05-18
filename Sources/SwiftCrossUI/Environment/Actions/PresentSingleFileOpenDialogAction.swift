@@ -4,8 +4,8 @@
 /// backends only allow selecting either files or directories but not both
 /// in a single dialog. Returns `nil` if the user cancels the operation.
 public struct PresentSingleFileOpenDialogAction {
-    let backend: any AppBackend
-    let window: Any?
+    let backend: _UnsafeAnyAppBackend
+    let window: _UnsafeAnyAppBackend.Window?
 
     public func callAsFunction(
         title: String = "Open",
@@ -18,10 +18,10 @@ public struct PresentSingleFileOpenDialogAction {
     ) async -> URL? {
         func chooseFile<Backend: AppBackend>(backend: Backend) async -> URL? {
             await withCheckedContinuation { @MainActor continuation in
-                backend.runInMainThread { @MainActor in
+                backend.runInMainThread { @MainActor [window] in
                     let window: Backend.Window? =
-                        if let window = self.window {
-                            .some(window as! Backend.Window)
+                        if let window = window {
+                            .some(window.into(Backend.Window.self))
                         } else {
                             nil
                         }

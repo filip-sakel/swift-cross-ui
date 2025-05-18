@@ -27,6 +27,7 @@ public struct ViewGraphNode<NodeView: View, Backend: AppBackend> {
             let opaqueNode = ViewGraphNodes.shared.all[id]
             guard let opaqueNode else {
                 yield nil
+                return
             }
             
             yield Value(node: opaqueNode)
@@ -41,12 +42,12 @@ public struct ViewGraphNode<NodeView: View, Backend: AppBackend> {
             }
 
             defer {
-                // If the node isn't nil, update its value in the view graph.
-                if let value {
-                    ViewGraphNodes.shared.all[id] = value.node
-                } else {
-                    // If the node is nil, remove it from the view graph.
-                    destroy()
+                switch value {
+                    case let .some(unwrappedValue):
+                        // If the node is nil, remove it from the view graph.
+                        ViewGraphNodes.shared.all[id] = unwrappedValue.node
+                    case .none:
+                        destroy()
                 }
             }
 
@@ -97,7 +98,7 @@ public struct ViewGraphNode<NodeView: View, Backend: AppBackend> {
         @usableFromInline
         @_transparent
         init(node: borrowing _UnsafeViewGraphNode) {
-            self.node = node
+            self.node = copy node
         }
         
         @_transparent
@@ -361,7 +362,7 @@ public struct _UnsafeViewGraphNode {
         viewType: NodeView.Type, backend: Backend, 
         environment: EnvironmentValues
     ) -> EnvironmentValues {
-        environment.with(\.onResize) { _ in
+        environment.with(\.onResize) { [id] _ in
             guard ViewGraphNodes.shared.all[id] != nil else { return }
             ViewGraphNodes.shared.all[id]!.bottomUpUpdate(viewType: viewType, backend: backend)
         }
