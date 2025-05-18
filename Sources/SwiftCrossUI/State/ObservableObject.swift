@@ -37,7 +37,9 @@ public protocol ObservableObject: AnyObject {
     var didChange: Publisher { get }
 }
 
+#if !hasFeature(Embedded)
 extension ObservableObject {
+    @_unavailableInEmbedded
     public var didChange: Publisher {
         let publisher = Publisher()
             .tag(with: String(describing: type(of: self)))
@@ -59,6 +61,7 @@ extension ObservableObject {
         return publisher
     }
 }
+#endif
 
 @available(*, deprecated, message: "Replace Observable with ObservableObject")
 public typealias Observable = ObservableObject

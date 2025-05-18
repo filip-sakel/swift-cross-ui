@@ -46,14 +46,16 @@ fileprivate func _getTime(
   nanoseconds: UnsafeMutablePointer<Int64>,
   clock: Int32
 ) -> Void {
-  _EmbdeddedShims.swift_get_time(seconds, nanoseconds, unsafeBitCast(clock, to: swift_clock_id.self))
+  fatalError()
+  // _EmbdeddedShims.swift_get_time(seconds, nanoseconds, unsafeBitCast(clock, to: swift_clock_id.self))
 }
 
 fileprivate func _getClockRes(
   seconds: UnsafeMutablePointer<Int64>,
   nanoseconds: UnsafeMutablePointer<Int64>,
   clock: CInt) {
-  _EmbdeddedShims.swift_get_clock_res(seconds, nanoseconds, unsafeBitCast(clock, to: swift_clock_id.self))
+    fatalError()
+  // _EmbdeddedShims.swift_get_clock_res(seconds, nanoseconds, unsafeBitCast(clock, to: swift_clock_id.self))
 }
 
 enum _ClockID: Int32 {

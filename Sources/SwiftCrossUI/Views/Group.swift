@@ -1,7 +1,7 @@
 /// A view that groups views together without affecting their layout (allowing
 /// modifiers to be applied to a whole group of views at once).
 @View
-public struct Group<Content: View>: View {
+public struct Group<Content: View> {
     public var body: Content
 
     /// Creates a horizontal stack with the given spacing.

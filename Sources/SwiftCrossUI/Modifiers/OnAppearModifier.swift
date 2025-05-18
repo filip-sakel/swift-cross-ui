@@ -11,7 +11,8 @@ extension View {
     }
 }
 
-struct OnAppearModifier<Content: View>: View {
+@View
+struct OnAppearModifier<Content: View> {
     var body: TupleView1<Content>
     var action: () -> Void
 

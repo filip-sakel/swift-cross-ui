@@ -30,7 +30,7 @@ public typealias RGBA = Void
 
 /// A view that displays an image.
 @View
-public struct Image: TypeSafeView, View {
+public struct Image: TypeSafeView {
     private var isResizable = false
     private var source: Source
 

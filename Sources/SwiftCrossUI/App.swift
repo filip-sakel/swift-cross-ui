@@ -1,4 +1,8 @@
 // // import Foundation
+#if os(wasi)
+import JavaScriptEventLoop
+import JavaScriptKit
+#endif
 
 /// An application.
 public protocol App {
@@ -90,6 +94,10 @@ extension App {
 
     /// Runs the application.
     public static func main() {
+        #if os(wasi)
+        JavaScriptEventLoop.installGlobalExecutor()
+        #endif
+        
         swiftBundlerAppMetadata = extractSwiftBundlerMetadata()
 
         let app = Self()

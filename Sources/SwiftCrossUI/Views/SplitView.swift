@@ -1,7 +1,7 @@
 // import Foundation
 
 @View
-struct SplitView<Sidebar: View, Detail: View>: TypeSafeView, View {
+struct SplitView<Sidebar: View, Detail: View>: TypeSafeView {
     typealias Children = SplitViewChildren<EnvironmentModifier<Sidebar>, Detail>
 
     var body: TupleView2<EnvironmentModifier<Sidebar>, Detail>

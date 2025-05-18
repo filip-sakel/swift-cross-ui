@@ -9,7 +9,7 @@
 /// Only expected to be used directly by SwiftCrossUI itself or third
 /// party libraries extending SwiftCrossUI's hot reloading capabilities.
 @View
-public struct HotReloadableView: TypeSafeView, View {
+public struct HotReloadableView: TypeSafeView {
     typealias Children = HotReloadableViewChildren
 
     public var body = EmptyView()

@@ -1,6 +1,6 @@
 /// A view that arranges its subviews horizontally.
 @View
-public struct HStack<Content: View>: View {
+public struct HStack<Content: View> {
     public var body: Content
 
     /// The amount of spacing to apply between children.

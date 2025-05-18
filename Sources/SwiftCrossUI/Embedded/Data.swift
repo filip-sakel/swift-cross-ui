@@ -3326,12 +3326,15 @@ public struct Data : Equatable, Hashable, RandomAccessCollection, MutableCollect
 extension Data.Deallocator : Sendable {}
 
 extension String {
+    public enum Encoding {
+        case utf8
+    }
+
     @inlinable 
-    public init?(data: Data, encoding: String.Encoding) {
+    public init?(data: Data, encoding: Encoding) {
         let instance = data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             let buffer = bytes.bindMemory(to: UInt8.self)
-            let count = data.count
-            return String(bytes: buffer.baseAddress!, count: count, encoding: encoding)
+            return String(validating: buffer, as: Unicode.UTF8.self)
         }
 
         guard let instance = instance else {

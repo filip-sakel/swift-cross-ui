@@ -14,7 +14,7 @@ extension View {
 }
 
 @View
-struct OnChangeModifier<Value: Equatable, Content: View>: View {
+struct OnChangeModifier<Value: Equatable, Content: View> {
     // TODO: This probably doesn't have to trigger view updates. We're only
     //   really using @State here to persist the data.
     @State var previousValue: Value?

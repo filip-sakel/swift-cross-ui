@@ -1,5 +1,5 @@
 @View
-package struct EnvironmentModifier<Child: View>: View {
+package struct EnvironmentModifier<Child: View> {
     package var body: TupleView1<Child>
     var modification: (EnvironmentValues) -> EnvironmentValues
 

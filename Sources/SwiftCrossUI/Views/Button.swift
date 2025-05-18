@@ -1,6 +1,6 @@
 /// A control that initiates an action.
 @View(checkBody: false)
-public struct Button: ElementaryView, View {
+public struct Button: ElementaryView {
     /// The label to show on the button.
     package var label: String
     /// The action to be performed when the button is clicked.

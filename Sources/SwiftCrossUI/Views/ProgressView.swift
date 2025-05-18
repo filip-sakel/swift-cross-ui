@@ -1,7 +1,7 @@
 // import Foundation
 
 @View
-public struct ProgressView<Label: View>: View {
+public struct ProgressView<Label: View> {
     private var label: Label
     private var progress: Double?
     private var kind: Kind

@@ -1,5 +1,5 @@
 @View
-public struct List<SelectionValue: Hashable, RowView: View>: TypeSafeView, View {
+public struct List<SelectionValue: Hashable, RowView: View>: TypeSafeView {
     typealias Children = ListViewChildren<PaddingModifierView<RowView>>
 
     public let body = EmptyView()

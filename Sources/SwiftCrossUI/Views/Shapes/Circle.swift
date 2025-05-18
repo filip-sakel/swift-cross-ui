@@ -1,5 +1,5 @@
 @Shape
-public struct Circle: Shape {
+public struct Circle {
     public init() {}
 
     public func path(in bounds: Path.Rect) -> Path {

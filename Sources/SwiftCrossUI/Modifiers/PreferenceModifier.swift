@@ -12,7 +12,7 @@ extension View {
 }
 
 @View
-struct PreferenceModifier<Child: View>: View {
+struct PreferenceModifier<Child: View> {
     var body: TupleView1<Child>
     var modification: (PreferenceValues, EnvironmentValues) -> PreferenceValues
 

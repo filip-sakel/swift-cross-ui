@@ -59,6 +59,8 @@ switch ProcessInfo.processInfo.environment["SCUI_LIBRARY_TYPE"] {
         }
 }
 
+let useJavaScriptKitEventLoop = false
+
 let package = Package(
     name: "swift-cross-ui",
     platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .macCatalyst(.v13)],
@@ -113,6 +115,7 @@ let package = Package(
             url: "https://github.com/stackotter/swift-winui",
             branch: "fad446caf8f40370d82a043ec293646023e07e61"
         ),
+        .package(url: "https://github.com/swiftwasm/JavaScriptKit.git", branch: "main"),
         // .package(
         //     url: "https://github.com/stackotter/TermKit",
         //     revision: "163afa64f1257a0c026cc83ed8bc47a5f8fc9704"
@@ -139,6 +142,7 @@ let package = Package(
                 "_EmbdeddedShims",
                 "HotReloadingMacrosPlugin",
                 "StateMacros",
+                .product(name: "JavaScriptEventLoop", package: "JavaScriptKit", condition: .when(platforms: [.wasi])),
                 // .product(name: "ImageFormats", package: "swift-image-formats"),
             ],
             exclude: [

@@ -33,6 +33,8 @@ func extractDynamicProperties(structDecl: StructDeclSyntax, context: some MacroE
 
             // Skip properties with accessors
             guard binding.accessorBlock == nil else { continue }
+            // Skip static properties
+            guard !varDecl.modifiers.contains(where: { $0.name.text == "static" }) else { continue }
 
             let hasWrapperAttr = varDecl.attributes.contains(where: { attr in
             guard let attrName = attr.as(AttributeSyntax.self)?
@@ -70,7 +72,7 @@ func createNameMember(structDecl: StructDeclSyntax, type: some TypeSyntaxProtoco
 
     let nameMethod: DeclSyntax = """
         public static func _name() -> String {
-            return \(literal: typeName)
+            return "\(raw: typeName)"
         }
         """
     return nameMethod
@@ -120,6 +122,33 @@ func createUpdateMethod(structDecl: StructDeclSyntax, prelude: StmtSyntax? = nil
     return updateMethod
 }
 
+func assertNoConformance(
+    structDecl: StructDeclSyntax,
+    protocolName: String,
+    macroName: String,
+    context: some MacroExpansionContext
+) -> Bool {
+    // Check if the struct already conforms to the protocol
+    let conformsToProtocol = structDecl.inheritanceClause?.inheritedTypes.contains { conformance in
+        guard let type = conformance.type.as(IdentifierTypeSyntax.self) else { return false }
+        return type.name.text == protocolName
+    } ?? false
+
+    if conformsToProtocol {
+        context.diagnose(
+            Diagnostic(
+                node: structDecl.name,
+                message: SimpleDiagnosticMessage(
+                    message: "Type '\(structDecl.name)' redeclares conformance to '\(protocolName)' that's implied by the '\(macroName)' attribute.",
+                    severity: .error
+                )
+            )
+        )
+    }
+
+    return conformsToProtocol
+}
+
 func createDynamicPropertyExtension(
     protocolName: String,
     typeDecl: some DeclGroupSyntax,
@@ -127,8 +156,18 @@ func createDynamicPropertyExtension(
     context: some MacroExpansionContext
 ) throws -> (structDecl: StructDeclSyntax, extensionDecl: ExtensionDeclSyntax) {
     let structDecl = try extractStructDecl(from: typeDecl, macroName: protocolName)
+
+    // Check if the struct already conforms to the protocol
+    let conformsToProtocol = assertNoConformance(
+        structDecl: structDecl, 
+        protocolName: protocolName, macroName: "@\(protocolName)", 
+        context: context
+    )
+    
+    // Get the dynamic properties
     let dynamicProps = extractDynamicProperties(structDecl: structDecl, context: context)
 
+    // Create the requirements
     let updateMethod = createUpdateMethod(
         structDecl: structDecl, 
         // Containers don't have a "sourceName"; they're the source.
@@ -139,8 +178,10 @@ func createDynamicPropertyExtension(
     let observeMethod = createObserveMethod(structDecl: structDecl, dynamicProps: dynamicProps, context: context)
     let nameMethod = createNameMember(structDecl: structDecl, type: type, context: context)
 
+    // Create the extension declaration
+    let inheritenceClause = conformsToProtocol ? "" : ": \(protocolName)"
     let extensionDecl: DeclSyntax = """
-    extension \(raw: type.trimmed): \(raw: protocolName) {
+    extension \(raw: type.trimmed)\(raw: inheritenceClause) {
         \(updateMethod)
         \(observeMethod)
         \(nameMethod)
@@ -148,4 +189,61 @@ func createDynamicPropertyExtension(
     """
 
     return (structDecl, ExtensionDeclSyntax(extensionDecl)!)
+}
+
+func annotateBuilderProperty(
+    decl: some DeclSyntaxProtocol,
+    propertyName: String,
+    builderMacroName: String,
+    context: some MacroExpansionContext
+) -> AttributeSyntax? {
+    // Check if the property is the one with `propertyName`
+    guard let varDecl = decl.as(VariableDeclSyntax.self),
+          let binding = varDecl.bindings.first,
+          let identPattern = binding.pattern.as(IdentifierPatternSyntax.self),
+          identPattern.identifier.trimmedDescription == propertyName,
+          // Check if the property is not static
+          !varDecl.modifiers.contains(where: { $0.name.text == "static" }),
+          // Check that the property is a computed property
+          let accessorBlock = binding.accessorBlock
+    else {
+        return nil
+    }
+
+    // Warn if the property's accessor is not a getter
+    guard case .getter = accessorBlock.accessors else {
+        context.diagnose(
+            Diagnostic(
+                node: decl,
+                message: SimpleDiagnosticMessage(
+                    message: "Cannot annotate property \(propertyName) with @\(builderMacroName) because it's not a getter.",
+                    severity: .warning
+                )
+            )
+        )
+        return nil
+    }
+
+    // Check that there's only one binding before we apply the macro; otherwise warn the user.
+    guard varDecl.bindings.count == 1 else {
+        context.diagnose(
+            Diagnostic(
+                node: decl,
+                message: SimpleDiagnosticMessage(
+                    message: "Cannot annotate property \(propertyName) with @\(builderMacroName) because it's declared alongside other properties.",
+                    severity: .warning
+                )
+            )
+        )
+        return nil
+    }
+
+    let builderAttr: AttributeSyntax = "@\(raw: builderMacroName)"
+
+    // Check if the property is already annotated with the builder macro
+    if varDecl.attributes.contains(where: { $0.as(AttributeSyntax.self)?.attributeName.trimmedDescription == builderMacroName }) {
+        return nil
+    }
+
+    return builderAttr
 }

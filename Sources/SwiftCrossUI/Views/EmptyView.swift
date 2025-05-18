@@ -1,7 +1,7 @@
 /// A placeholder view used by elementary ``View`` implementations which don't have bodies. Fatally
 /// crashes if rendered.
 @View
-public struct EmptyView: View {
+public struct EmptyView {
     public var body: Never {
         return fatalError("Rendered EmptyView")
     }

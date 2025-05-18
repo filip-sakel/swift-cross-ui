@@ -6,7 +6,7 @@
 /// ``AnyView`` has significantly more overhead than strongly
 /// typed views.
 @View
-public struct AnyView: TypeSafeView, View {
+public struct AnyView: TypeSafeView {
     typealias Children = AnyViewChildren
 
     public var body = EmptyView()

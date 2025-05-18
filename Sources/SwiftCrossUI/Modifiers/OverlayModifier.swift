@@ -4,6 +4,7 @@ extension View {
     }
 }
 
+@View
 struct OverlayModifier<Content: View, Overlay: View>: TypeSafeView {
     typealias Children = TupleView2<Content, Overlay>.Children
 

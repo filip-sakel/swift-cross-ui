@@ -41,6 +41,7 @@ public struct Environment<Value>: DynamicProperty {
 
     public func update(
         with environment: EnvironmentValues,
+        propertyName: String,
         previousValue: Self?
     ) {
         value.value = environment[keyPath: keyPath]
@@ -64,7 +65,7 @@ public struct Environment<Value>: DynamicProperty {
         value = Box(value: nil)
     }
 
-    public func _updateDynamicProperties(with environment: EnvironmentValues, previousValue: Environment<Value>?) {
+    public func _updateDynamicProperties(with environment: EnvironmentValues, propertyName: String, previousValue: Environment<Value>?) {
         update(with: environment, previousValue: previousValue)
     }
 

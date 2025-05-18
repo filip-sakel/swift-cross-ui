@@ -11,7 +11,7 @@ public struct State<Value>: DynamicProperty {
         // updates.
         var box: Box<Value>
         var didChange = Publisher()
-        var name: String = ""
+        var name: String? = nil
 
         init(_ value: Value) {
             self.box = Box(value: value)
@@ -68,7 +68,7 @@ public struct State<Value>: DynamicProperty {
 }
 
 extension State: StateProperty {
-    var name: String {
+    var name: String? {
         storage.name
     }
 
@@ -119,12 +119,12 @@ protocol StateProperty {
     func tryRestoreFromSnapshot(_ snapshot: Data)
     func snapshot() throws -> Data?
 
-    var name: String { get }
+    var name: String? { get }
 }
 
 /// A type-erased wrapper for a state property.
 public struct _AnyStateProperty: StateProperty {
-    private let _name: String
+    private let _name: String?
     private let _didChange: Publisher
     private let _snapshot: () throws -> Data?
     private let _tryRestoreFromSnapshot: (Data) -> Void
@@ -136,7 +136,7 @@ public struct _AnyStateProperty: StateProperty {
         self._tryRestoreFromSnapshot = { property.tryRestoreFromSnapshot($0) }
     }
 
-    var name: String {
+    var name: String? {
         _name
     }
 

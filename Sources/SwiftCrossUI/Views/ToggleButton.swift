@@ -1,6 +1,6 @@
 /// A button style control that is either on or off.
 @View(checkBody: false)
-struct ToggleButton: ElementaryView, View {
+struct ToggleButton: ElementaryView {
     /// The label to show on the toggle button.
     private var label: String
     /// Whether the button is active or not.

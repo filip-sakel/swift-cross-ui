@@ -1,5 +1,5 @@
 @View
-public struct Toggle: View {
+public struct Toggle {
     @Environment(\.backend) var backend
 
     /// The style of toggle shown.

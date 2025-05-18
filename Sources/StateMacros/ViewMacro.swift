@@ -3,7 +3,7 @@ import SwiftSyntaxMacros
 import SwiftCompilerPlugin
 import SwiftDiagnostics
 
-public struct ViewMacro: ExtensionMacro {
+public struct ViewMacro: ExtensionMacro, MemberAttributeMacro {
     public static func expansion(
         of node: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
@@ -109,5 +109,24 @@ public struct ViewMacro: ExtensionMacro {
         }
 
         return [extDecl]
+    }
+
+
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingAttributesFor member: some DeclSyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) throws -> [AttributeSyntax] {
+        guard let attribute = annotateBuilderProperty(
+            decl: member,
+            propertyName: "body",
+            builderMacroName: "ViewBuilder",
+            context: context
+        ) else {
+            return []
+        }
+
+        return [attribute]
     }
 }
