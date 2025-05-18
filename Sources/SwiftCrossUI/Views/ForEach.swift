@@ -18,7 +18,7 @@ extension ForEach where Child == [MenuItem] {
     }
 }
 
-extension ForEach: TypeSafeView, View, _DynamicPropertyContainer where Child: View {
+extension ForEach: TypeSafeView, View where Child: View {
     typealias Children = ForEachViewChildren<Items, Child>
 
     public var body: EmptyView {

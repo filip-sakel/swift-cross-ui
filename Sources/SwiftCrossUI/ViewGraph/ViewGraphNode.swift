@@ -1,18 +1,208 @@
 // import Foundation
 
+@MainActor
+private struct ViewGraphNodes {
+    var lastID = 0
+    var all = [Int: _UnsafeViewGraphNode]()
+
+    mutating func generateID() -> Int {
+        lastID += 1
+        return lastID
+    }
+
+    mutating func removeNode(_ id: Int) -> _UnsafeViewGraphNode? {
+        let instance = all[id]
+        all.removeValue(forKey: id)
+        return instance
+    }
+    fileprivate static var shared = ViewGraphNodes()
+}
+
+@MainActor
+public struct ViewGraphNode<NodeView: View, Backend: AppBackend> {
+    public let id: Int
+
+    public var value: Value? {
+        @lifetime(borrow self)
+        _read {
+            let opaqueNode = ViewGraphNodes.shared.all[id]
+            guard let opaqueNode else {
+                yield nil
+            }
+            
+            yield Value(node: opaqueNode)
+        }
+        @lifetime(&self)
+        _modify {
+            let opaqueNode = ViewGraphNodes.shared.all[id]
+            var value: Value?
+            if let opaqueNode {
+                value = Value(node: opaqueNode)
+            } else {
+                value = nil
+            }
+
+            defer {
+                // If the node isn't nil, update its value in the view graph.
+                if let value {
+                    ViewGraphNodes.shared.all[id] = value.node
+                } else {
+                    // If the node is nil, remove it from the view graph.
+                    destroy()
+                }
+            }
+
+            yield &value
+        }
+    }
+
+    /// Creates a node for a given view while also creating the nodes for its children, creating
+    /// the view's widget, and starting to observe its state for changes.
+    public static func create(
+        for nodeView: NodeView,
+        backend: Backend,
+        snapshot: ViewGraphSnapshotter.NodeSnapshot? = nil,
+        environment: EnvironmentValues
+    ) -> ViewGraphNode<NodeView, Backend> {
+        // Generate a unique ID for the node.
+        let id = ViewGraphNodes.shared.generateID()
+
+        // Create the node instance.
+        let instance = _UnsafeViewGraphNode(
+            id: id,
+            for: nodeView,
+            backend: backend,
+            snapshot: snapshot,
+            environment: environment
+        )
+
+        // Store the node instance in the view graph.
+        ViewGraphNodes.shared.all[id] = instance
+
+        // Return the reference to the node.
+        let node = ViewGraphNode<NodeView, Backend>(id: id)
+        return node
+    }
+
+    public func destroy() {
+        guard let removedNode = ViewGraphNodes.shared.removeNode(id) else {
+            fatalError("ViewGraphNode with id \(id) not found")
+        }
+        removedNode.destroy(viewType: NodeView.self, backendType: Backend.self)
+    }
+
+    /// Get the properties
+    public struct Value: ~Copyable, ~Escapable {
+        @usableFromInline
+        var node: _UnsafeViewGraphNode
+
+        @usableFromInline
+        @_transparent
+        init(node: borrowing _UnsafeViewGraphNode) {
+            self.node = node
+        }
+        
+        @_transparent
+        public var widget: Backend.Widget? {
+            node.getWidget(Backend.self)
+        }
+
+        @_transparent
+        public var view: NodeView {
+            node[viewType: NodeView.self]
+        }
+
+        @_transparent
+        public var children: any ViewGraphNodeChildren {
+            node.children
+        }
+
+
+        public var currentResult: ViewUpdateResult? {
+            @_transparent
+            get {
+                node.currentResult
+            }
+            @lifetime(&self)
+            @_transparent
+            _modify {
+                yield &node.currentResult
+            }
+        }
+
+        public var resultCache: [SIMD2<Int>: ViewUpdateResult] {
+            @_transparent
+            get {
+                node.resultCache
+            }
+            @lifetime(&self)
+            @_transparent
+            _modify {
+                yield &node.resultCache
+            }
+        }
+
+        public var lastProposedSize: SIMD2<Int> {
+            @_transparent
+            get {
+                node.lastProposedSize
+            }
+            @lifetime(&self)
+            @_transparent
+            _modify {
+                yield &node.lastProposedSize
+            }
+        }
+        public var parentEnvironment: EnvironmentValues {
+            @_transparent
+            get {
+                node.parentEnvironment
+            }
+            @lifetime(&self)
+            @_transparent
+            _modify {
+                yield &node.parentEnvironment
+            }
+        }
+
+        // Replicate the functions
+        @lifetime(&self)
+        public mutating func update(
+            with newView: NodeView? = nil,
+            proposedSize: SIMD2<Int>,
+            environment: EnvironmentValues,
+            dryRun: Bool,
+            backend: Backend
+        ) -> ViewUpdateResult {
+            node.update(
+                with: newView,
+                proposedSize: proposedSize,
+                environment: environment,
+                dryRun: dryRun,
+                backend: backend
+            )
+        }
+    }
+}
+
 /// A view graph node storing a view, its widget, and its children (likely a collection of more nodes).
 ///
 /// This is where updates are initiated when a view's state updates, and where state is persisted
 /// even when a view gets recomputed by its parent.
-public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
+public struct _UnsafeViewGraphNode {
+    // FIXME: Make ~Copyable when non-copyable dictionaries are available in Swift.
+
     /// The view's single widget for the entirety of its lifetime in the view graph.
     ///
-    public var widget: Backend.Widget {
-        _widget!
+    @_transparent
+    public func getWidget<Backend: AppBackend>(_ type: Backend.Type) -> Backend.Widget {
+        // Cast it back to the widget type.
+        _widget![Backend.Widget.self]
     }
     /// Only optional because of some initialisation order requirements. Private and wrapped to
     /// hide this inconvenient detail.
-    private var _widget: Backend.Widget?
+    @usableFromInline
+    internal var _widget: _UnsafeAnyType?
     /// The view's children (usually just contains more view graph nodes, but can handle extra logic
     /// such as figuring out how to update variable length array of children efficiently).
     ///
@@ -20,49 +210,68 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
     /// or other compromises would have to be made. I believe that this is the best option with Swift's
     /// current generics landscape.
     public var children: any ViewGraphNodeChildren {
+        @_transparent
         get {
             _children!
         }
+        @_transparent
         set {
             _children = newValue
         }
     }
     /// Only optional because of some initialisation order requirements. Private and wrapped to
     /// hide this inconvenient detail.
-    private var _children: (any ViewGraphNodeChildren)?
+    @usableFromInline
+    var _children: (any ViewGraphNodeChildren)?
     /// A copy of the view itself (from the latest computed body of its parent).
-    public var view: NodeView
-    /// The backend used to create the view's widget.
-    public var backend: Backend
+    public subscript<NodeView: View>(viewType type: NodeView.Type) -> NodeView {
+        @_transparent
+        get {
+            _view[type]
+        }
+        @_transparent
+        set {
+            _view[type] = newValue
+        }
+    }
+    @usableFromInline
+    internal var _view: _UnsafeAnyType
 
     /// The most recent update result for the wrapped view.
+    @usableFromInline
     var currentResult: ViewUpdateResult?
     /// A cache of update results keyed by the proposed size they were for. Gets cleared before the
     /// results' sizes become invalid.
+    @usableFromInline
     var resultCache: [SIMD2<Int>: ViewUpdateResult]
     /// The most recent size proposed by the parent view. Used when updating the wrapped
     /// view as a result of a state change rather than the parent view updating.
-    private var lastProposedSize: SIMD2<Int>
+    @usableFromInline
+    var lastProposedSize: SIMD2<Int>
 
     /// A cancellable handle to the view's state property observations.
-    private var cancellables: [Cancellable]
+    @usableFromInline
+    var cancellables: [Cancellable]
 
     /// The environment most recently provided by this node's parent.
-    private var parentEnvironment: EnvironmentValues
+    @usableFromInline
+    var parentEnvironment: EnvironmentValues
 
-    /// Creates a node for a given view while also creating the nodes for its children, creating
-    /// the view's widget, and starting to observe its state for changes.
-    public init(
+    @usableFromInline
+    let id: Int
+
+    fileprivate init<NodeView: View, Backend: AppBackend>(
+        id: Int,
         for nodeView: NodeView,
         backend: Backend,
         snapshot: ViewGraphSnapshotter.NodeSnapshot? = nil,
         environment: EnvironmentValues
     ) {
-        self.backend = backend
+        self.id = id
 
         // Restore node snapshot if present.
-        self.view = nodeView
-        snapshot?.restore(to: view)
+        self._view = _UnsafeAnyType(nodeView)
+        snapshot?.restore(to: nodeView)
 
         // First create the view's child nodes and widgets
         let childSnapshots =
@@ -75,11 +284,14 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         parentEnvironment = environment
         cancellables = []
 
-        let viewEnvironment = updateEnvironment(environment)
+        let viewEnvironment = updateEnvironment(
+            viewType: NodeView.self, backend: backend, 
+            environment: environment
+        )
 
-        view._updateDynamicProperties(with: viewEnvironment, previousValue: nil)
+        nodeView._updateDynamicProperties(with: viewEnvironment, previousValue: nil)
 
-        let children = view.children(
+        let children = nodeView.children(
             backend: backend,
             snapshots: childSnapshots,
             environment: viewEnvironment
@@ -87,42 +299,37 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         self.children = children
 
         // Then create the widget for the view itself
-        let widget = view.asWidget(
+        let widget = nodeView.asWidget(
             children,
             backend: backend
         )
-        _widget = widget
+        _widget = _UnsafeAnyType(widget)
 
         let tag = String(NodeView._name().split(separator: "<")[0])
         backend.tag(widget: widget, as: tag)
 
         // Update the view and its children when state changes (children are always updated first).
-        self.cancellables = view._observeState().map { state in
-            state.didChange.observeAsUIUpdater(backend: backend) { [weak self] in
-                guard let self = self else { return }
-                self.bottomUpUpdate()
+        self.cancellables = nodeView._observeState().map { state in
+            state.didChange.observeAsUIUpdater(backend: backend) { 
+                guard ViewGraphNodes.shared.all[id] != nil else { return }
+                ViewGraphNodes.shared.all[id]!.bottomUpUpdate(viewType: NodeView.self, backend: backend)
             }
-        }
-    }
-
-    /// Stops observing the view's state.
-    deinit {
-        for cancellable in cancellables {
-            cancellable.cancel()
         }
     }
 
     /// Triggers the view to be updated as part of a bottom-up chain of updates (where either the
     /// current view gets updated due to a state change and has potential to trigger its parent to
     /// update as well, or the current view's child has propagated such an update upwards).
-    private func bottomUpUpdate() {
+    private mutating func bottomUpUpdate<NodeView: View, Backend: AppBackend>(viewType: NodeView.Type, backend: Backend) {
         // First we compute what size the view will be after the update. If it will change size,
         // propagate the update to this node's parent instead of updating straight away.
         let currentSize = currentResult?.size
         let newResult = self.update(
+            with: Optional<NodeView>.none, // We don't pass nil to specify the type
             proposedSize: lastProposedSize,
             environment: parentEnvironment,
-            dryRun: true
+            dryRun: true,
+            backend: backend
         )
 
         if newResult.size != currentSize {
@@ -131,9 +338,11 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
             parentEnvironment.onResize(newResult.size)
         } else {
             let finalResult = self.update(
+                with: Optional<NodeView>.none, // We don't pass nil to specify the type
                 proposedSize: lastProposedSize,
                 environment: parentEnvironment,
-                dryRun: false
+                dryRun: false,
+                backend: backend
             )
             if finalResult.size != newResult.size {
                 print(
@@ -149,10 +358,13 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         }
     }
 
-    private func updateEnvironment(_ environment: EnvironmentValues) -> EnvironmentValues {
-        environment.with(\.onResize) { [weak self] _ in
-            guard let self = self else { return }
-            self.bottomUpUpdate()
+    private mutating func updateEnvironment<NodeView: View, Backend: AppBackend>(
+        viewType: NodeView.Type, backend: Backend, 
+        environment: EnvironmentValues
+    ) -> EnvironmentValues {
+        environment.with(\.onResize) { _ in
+            guard ViewGraphNodes.shared.all[id] != nil else { return }
+            ViewGraphNodes.shared.all[id]!.bottomUpUpdate(viewType: viewType, backend: backend)
         }
     }
 
@@ -161,11 +373,12 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
     /// is provided (in the case that the parent's body got updated) then it simply replaces the
     /// old view while inheriting the old view's state.
     /// - Parameter dryRun: If `true`, only compute sizing and don't update the underlying widget.
-    public func update(
+    public mutating func update<NodeView: View, Backend: AppBackend>(
         with newView: NodeView? = nil,
         proposedSize: SIMD2<Int>,
         environment: EnvironmentValues,
-        dryRun: Bool
+        dryRun: Bool,
+        backend: Backend
     ) -> ViewUpdateResult {
         // Defensively ensure that all future scene implementations obey this
         // precondition. By putting the check here instead of only in views
@@ -219,23 +432,28 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         parentEnvironment = environment
         lastProposedSize = proposedSize
 
+        let viewEnvironment = updateEnvironment(
+            viewType: NodeView.self, backend: backend, 
+            environment: environment
+        )
+
         let previousView: NodeView?
+        let view: NodeView
         if let newView {
-            previousView = view
+            previousView = _view[NodeView.self]
             view = newView
         } else {
             previousView = nil
+            view = _view[NodeView.self]
         }
-
-        let viewEnvironment = updateEnvironment(environment)
 
         view._updateDynamicProperties(with: viewEnvironment, previousValue: previousView)
 
         if !dryRun {
-            backend.show(widget: widget)
+            backend.show(widget: getWidget(Backend.self))
         }
         let result = view.update(
-            widget,
+            getWidget(Backend.self),
             children: children,
             proposedSize: proposedSize,
             environment: viewEnvironment,
@@ -254,7 +472,19 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
             resultCache[proposedSize] = result
         }
 
+        // Save view
+        _view[NodeView.self] = view
+
         currentResult = result
         return result
+    }
+
+    consuming func destroy<NodeView: View, Backend: AppBackend>(viewType: NodeView.Type, backendType: Backend.Type) {
+        for cancellable in cancellables {
+            cancellable.cancel()
+        }
+        _children = nil
+        _widget!.destroy(NodeView.self)
+        _view.destroy(Backend.self)
     }
 }

@@ -66,7 +66,7 @@ public struct Environment<Value>: DynamicProperty {
     }
 
     public func _updateDynamicProperties(with environment: EnvironmentValues, propertyName: String, previousValue: Environment<Value>?) {
-        update(with: environment, previousValue: previousValue)
+        update(with: environment, propertyName: propertyName, previousValue: previousValue)
     }
 
     public func _observeState() -> [_AnyStateProperty] {

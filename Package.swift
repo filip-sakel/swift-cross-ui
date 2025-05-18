@@ -159,6 +159,7 @@ let package = Package(
                 .enableExperimentalFeature("Extern"),
                 .enableUpcomingFeature("StrictMemorySafety"),
                 .enableExperimentalFeature("AllowUnsafeAttribute"),
+                .enableExperimentalFeature("LifetimeDependence"),
             ]
         ),
         .testTarget(
