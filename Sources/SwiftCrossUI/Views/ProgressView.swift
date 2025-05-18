@@ -1,6 +1,6 @@
 // import Foundation
 
-@View
+@View(checkConformance: false)
 public struct ProgressView<Label: View> {
     private var label: Label
     private var progress: Double?
@@ -11,6 +11,7 @@ public struct ProgressView<Label: View> {
         case bar
     }
 
+    @ViewBuilder @MainActor
     public var body: some View {
         if label as? EmptyView == nil {
             progressIndicator
@@ -20,7 +21,7 @@ public struct ProgressView<Label: View> {
         }
     }
 
-    @ViewBuilder
+    @ViewBuilder @MainActor
     private var progressIndicator: some View {
         switch kind {
             case .spinner:
@@ -30,12 +31,12 @@ public struct ProgressView<Label: View> {
         }
     }
 
-    public init(_ label: Label) {
+    public nonisolated init(_ label: Label) {
         self.label = label
         self.kind = .spinner
     }
 
-    public init(_ label: Label, _ progress: Progress) {
+    public nonisolated init(_ label: Label, _ progress: Progress) {
         self.label = label
         self.kind = .bar
 
@@ -46,7 +47,7 @@ public struct ProgressView<Label: View> {
 
     /// Creates a progress bar view. If `value` is `nil`, an indeterminate progress
     /// bar will be shown.
-    public init<Value: BinaryFloatingPoint>(_ label: Label, value: Value?) {
+    public nonisolated init<Value: BinaryFloatingPoint>(_ label: Label, value: Value?) {
         self.label = label
         self.kind = .bar
         self.progress = value.map(Double.init)
@@ -54,12 +55,12 @@ public struct ProgressView<Label: View> {
 }
 
 extension ProgressView where Label == EmptyView {
-    public init() {
+    public nonisolated init() {
         self.label = EmptyView()
         self.kind = .spinner
     }
 
-    public init(_ progress: Progress) {
+    public nonisolated init(_ progress: Progress) {
         self.label = EmptyView()
         self.kind = .bar
 
@@ -70,7 +71,7 @@ extension ProgressView where Label == EmptyView {
 
     /// Creates a progress bar view. If `value` is `nil`, an indeterminate progress
     /// bar will be shown.
-    public init<Value: BinaryFloatingPoint>(value: Value?) {
+    public nonisolated init<Value: BinaryFloatingPoint>(value: Value?) {
         self.label = EmptyView()
         self.kind = .bar
         self.progress = value.map(Double.init)
@@ -92,12 +93,12 @@ import class Foundation.Progress
 #endif
 
 extension ProgressView where Label == Text {
-    public init(_ label: String) {
+    public nonisolated init(_ label: String) {
         self.label = Text(label)
         self.kind = .spinner
     }
 
-    public init(_ label: String, _ progress: Progress) {
+    public nonisolated init(_ label: String, _ progress: Progress) {
         self.label = Text(label)
         self.kind = .bar
 
@@ -108,7 +109,7 @@ extension ProgressView where Label == Text {
 
     /// Creates a progress bar view. If `value` is `nil`, an indeterminate progress
     /// bar will be shown.
-    public init<Value: BinaryFloatingPoint>(_ label: String, value: Value?) {
+    public nonisolated init<Value: BinaryFloatingPoint>(_ label: String, value: Value?) {
         self.label = Text(label)
         self.kind = .bar
         self.progress = value.map(Double.init)
@@ -116,7 +117,7 @@ extension ProgressView where Label == Text {
 }
 
 @View(checkBody: false)
-struct ProgressSpinnerView: ElementaryView {
+struct ProgressSpinnerView: View, ElementaryView {
     init() {}
 
     func asWidget<Backend: AppBackend>(backend: Backend) -> Backend.Widget {
@@ -137,7 +138,7 @@ struct ProgressSpinnerView: ElementaryView {
 }
 
 @View(checkBody: false)
-struct ProgressBarView: ElementaryView {
+struct ProgressBarView: View, ElementaryView {
     var value: Double?
 
     init(value: Double?) {

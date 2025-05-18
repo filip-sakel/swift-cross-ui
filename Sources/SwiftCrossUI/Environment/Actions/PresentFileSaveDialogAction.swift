@@ -3,8 +3,8 @@
 /// Presents a 'Save file' dialog fit for selecting a save destination. Returns
 /// `nil` if the user cancels the operation.
 public struct PresentFileSaveDialogAction {
-    let backend: any AppBackend
-    let window: Any?
+    let backend: _UnsafeAnyAppBackend
+    let window: _UnsafeAnyAppBackend.Window?
 
     public func callAsFunction(
         title: String = "Save",
@@ -16,11 +16,11 @@ public struct PresentFileSaveDialogAction {
         defaultFileName: String? = nil
     ) async -> URL? {
         func chooseFile<Backend: AppBackend>(backend: Backend) async -> URL? {
-            return await withCheckedContinuation { continuation in
-                backend.runInMainThread {
-                    let window: Backend.Window? =
-                        if let window = self.window {
-                            .some(window as! Backend.Window)
+            return await withCheckedContinuation { @MainActor continuation in
+                backend.runInMainThread { @MainActor [window] in
+                    let actualWindow: Backend.Window? =
+                        if let window = window {
+                            .some(window._window[Backend.Window.self])
                         } else {
                             nil
                         }
@@ -38,7 +38,7 @@ public struct PresentFileSaveDialogAction {
                             nameFieldLabel: nameFieldLabel,
                             defaultFileName: defaultFileName
                         ),
-                        window: window
+                        window: actualWindow
                     ) { result in
                         switch result {
                             case .success(let url):

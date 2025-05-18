@@ -75,7 +75,7 @@ extension EdgeInsets.Internal {
 
 /// The implementation for the ``View/padding(_:_:)`` modifier.
 @View
-struct PaddingModifierView<Child: View>: TypeSafeView {
+struct PaddingModifierView<Child: View>: View, TypeSafeView {
     var body: TupleView1<Child>
 
     /// The insets for each edge.

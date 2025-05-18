@@ -11,44 +11,51 @@ public struct ViewMacro: ExtensionMacro, MemberAttributeMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        let (structDecl, extDecl) = try createDynamicPropertyExtension(
-            protocolName: "View",
-            typeDecl: declaration,
-            type: type,
-            context: context
-        )
-
         // Get macro arguments
         var checkBody = true
+        var checkConformance = true
         if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
-            if arguments.count > 1 {
+            if arguments.count > 2 {
                 context.diagnose(
                     Diagnostic(
                         node: node,
                         message: SimpleDiagnosticMessage(
-                            message: "Only one argument is allowed for @View",
+                            message: "At most two arguments are allowed for @View",
                             severity: .error
                         )
                     )
                 )
             }
             for arg in arguments {
-                guard let label = arg.label?.text, label == "checkBody",
-                let boolValue = arg.expression.as(BooleanLiteralExprSyntax.self) else {
+                if let label = arg.label?.text, label == "checkBody",
+                let boolValue = arg.expression.as(BooleanLiteralExprSyntax.self) {
+                    checkBody = boolValue.literal.text == "true"
+                } else if let  label = arg.label?.text, label == "checkConformance",
+                    let boolValue = arg.expression.as(BooleanLiteralExprSyntax.self) {
+                    checkConformance = boolValue.literal.text == "true"
+                } else {
                     context.diagnose(
                         Diagnostic(
                             node: arg,
                             message: SimpleDiagnosticMessage(
-                                message: "Invalid argument for @View. Expected `checkBody: Bool`.",
+                                message: "Invalid argument for @View. Expected `checkBody: Bool` or `checkConformance: Bool`.",
                                 severity: .error
                             )
                         )
                     )
-                    continue
                 }
-                checkBody = boolValue.literal.text == "true"
+                
             }
         }
+
+        // Create the extension declaration
+        let (structDecl, extDecl) = try createDynamicPropertyExtension(
+            protocolName: "View",
+            assertConformance: checkConformance,
+            typeDecl: declaration,
+            type: type,
+            context: context
+        )
 
         // Check for `body` property
         if checkBody {
@@ -61,7 +68,6 @@ public struct ViewMacro: ExtensionMacro, MemberAttributeMacro {
                         ident.identifier.text == "body" else { continue }
 
                     foundBody = true
-                    break
 
                     if let accessorBlock = binding.accessorBlock {
                         let accessors = accessorBlock.accessors
@@ -118,15 +124,15 @@ public struct ViewMacro: ExtensionMacro, MemberAttributeMacro {
         providingAttributesFor member: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
-        guard let attribute = annotateBuilderProperty(
+        let builderAttributes = annotateBuilderProperty(
             decl: member,
             propertyName: "body",
             builderMacroName: "ViewBuilder",
             context: context
-        ) else {
-            return []
-        }
+        )
 
-        return [attribute]
+        let isolationAttributes = annotateMainActor(decl: member, context: context)
+
+        return [isolationAttributes, builderAttributes].compactMap { $0 }
     }
 }

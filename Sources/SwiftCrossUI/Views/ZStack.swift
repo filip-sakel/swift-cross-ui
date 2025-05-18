@@ -1,5 +1,5 @@
 @View
-public struct ZStack<Content: View> {
+public struct ZStack<Content: View>: View {
     public var alignment: Alignment
     public var body: Content
 

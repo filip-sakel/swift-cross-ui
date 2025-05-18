@@ -1,11 +1,11 @@
 /// A text view.
 @View(checkBody: false)
-public struct Text: ElementaryView {
+public struct Text: View, ElementaryView {
     /// The string to be shown in the text view.
     var string: String
 
     /// Creates a new text view that displays a string with configurable wrapping.
-    public init(_ string: String) {
+    public nonisolated init(_ string: String) {
         self.string = string
     }
 

@@ -43,7 +43,7 @@ struct IntegerValue<Value: BinaryInteger>: DoubleConvertible {
 
 /// A control for selecting a value from a bounded range of numerical values.
 @View(checkBody: false)
-public struct Slider: ElementaryView {
+public struct Slider: View, ElementaryView {
     /// A binding to the current value.
     private var value: Binding<Double>?
     /// The slider's minimum value.

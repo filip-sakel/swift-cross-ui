@@ -1,6 +1,6 @@
 /// A view that presents views in two or three columns.
 @View
-public struct NavigationSplitView<Sidebar: View, MiddleBar: View, Detail: View> {
+public struct NavigationSplitView<Sidebar: View, MiddleBar: View, Detail: View>: View {
     public var body: some View {
         SplitView(
             sidebar: {

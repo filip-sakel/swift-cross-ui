@@ -1,6 +1,6 @@
 /// A light switch style control that is either on or off.
 @View(checkBody: false)
-struct ToggleSwitch: ElementaryView {
+struct ToggleSwitch: View, ElementaryView {
     /// Whether the switch is active or not.
     private var active: Binding<Bool>
 

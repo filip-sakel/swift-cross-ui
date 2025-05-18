@@ -1,7 +1,7 @@
 /// A view that is scrollable when it would otherwise overflow available space. Use the
 /// ``View/frame`` modifier to constrain height if necessary.
 @View
-public struct ScrollView<Content: View>: TypeSafeView {
+public struct ScrollView<Content: View>: View, TypeSafeView {
     public var body: VStack<Content>
     public var axes: Axis.Set
 
@@ -151,7 +151,7 @@ public struct ScrollView<Content: View>: TypeSafeView {
     }
 }
 
-class ScrollViewChildren<Content: View>: ViewGraphNodeChildren {
+final class ScrollViewChildren<Content: View>: ViewGraphNodeChildren {
     var children: TupleView1<VStack<Content>>.Children
     var innerContainer: AnyWidget
 
@@ -177,5 +177,11 @@ class ScrollViewChildren<Content: View>: ViewGraphNodeChildren {
         let innerContainer = backend.createContainer()
         backend.addChild(children.child0.widget.into(), to: innerContainer)
         self.innerContainer = AnyWidget(innerContainer)
+    }
+
+    deinit {
+        // Since we strongly reference TupleView1<VStack<Content>>.Children
+        // which destroys the child node on deinit, then we don't need to manually destroy 
+        // the child nodes.
     }
 }

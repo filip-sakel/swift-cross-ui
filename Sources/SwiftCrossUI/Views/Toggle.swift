@@ -1,5 +1,5 @@
 @View
-public struct Toggle {
+public struct Toggle: View {
     @Environment(\.backend) var backend
 
     /// The style of toggle shown.
@@ -10,7 +10,7 @@ public struct Toggle {
     var active: Binding<Bool>
 
     /// Creates a toggle that displays a custom label.
-    public init(_ label: String, active: Binding<Bool>) {
+    public nonisolated init(_ label: String, active: sending Binding<Bool>) {
         self.label = label
         self.active = active
     }

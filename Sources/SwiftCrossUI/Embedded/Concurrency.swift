@@ -9,6 +9,125 @@ public typealias TimeInterval = Double
 
 import _Concurrency
 
+@globalActor
+public actor MainActor {
+  public static let shared = MainActor()
+  public static var sharedUnownedExecutor: UnownedSerialExecutor {
+    fatalError("Not implemented")
+  }
+}
+
+public struct Task<Success, Failure: Error>: Sendable {
+  public static func sleep(_ duration: TimeInterval) async throws {
+    fatalError("Not implemented")
+  }
+  // Provide the init for Task {}
+  @discardableResult
+  public init(
+    priority: TaskPriority? = nil,
+    operation: sending @escaping @isolated(any) () async throws -> Success
+  ) where Failure == Never {
+    fatalError("Not implemented")
+  }
+
+  @discardableResult
+  public init(
+    priority: TaskPriority? = nil,
+    operation: sending @escaping @isolated(any) () async throws -> Void
+  ) where Success == Void, Failure == Never {
+    fatalError("Not implemented")
+  }
+
+  var value: Success {
+    get async throws(Failure) {
+      fatalError("Not implemented")
+    }
+  }
+
+  public func cancel() {
+    fatalError("Not implemented")
+  }
+
+  @discardableResult
+  public static func detached(
+    priority: TaskPriority? = nil,
+    operation: sending @escaping @isolated(any) () async throws -> Success
+  ) -> Task where Failure == Never {
+    fatalError("Not implemented")
+  }
+
+  @discardableResult
+  public static func detached(
+    priority: TaskPriority? = nil,
+    operation: sending @escaping @isolated(any) () async throws -> Void
+  ) -> Task where Success == Void, Failure == Never {
+    fatalError("Not implemented")
+  }
+}
+
+public func withCheckedContinuation<T>(
+  _ body: @isolated(any) @Sendable (CheckedContinuation<T, Never>) -> Void
+) async -> T {
+  fatalError("Not implemented")
+}
+
+@available(SwiftStdlib 5.1, *)
+public struct TaskPriority: RawRepresentable, Sendable {
+  public typealias RawValue = UInt8
+  public var rawValue: UInt8
+
+  public init(rawValue: UInt8) {
+    self.rawValue = rawValue
+  }
+
+  public static let high: TaskPriority = .init(rawValue: 0x19)
+
+  @_alwaysEmitIntoClient
+  public static var medium: TaskPriority {
+    .init(rawValue: 0x15)
+  }
+
+  public static let low: TaskPriority = .init(rawValue: 0x11)
+
+  public static let userInitiated: TaskPriority = high
+  public static let utility: TaskPriority = low
+  public static let background: TaskPriority = .init(rawValue: 0x09)
+
+  @available(*, deprecated, renamed: "medium")
+  public static let `default`: TaskPriority = .init(rawValue: 0x15)
+}
+
+@available(SwiftStdlib 5.1, *)
+extension TaskPriority: Equatable {
+  public static func == (lhs: TaskPriority, rhs: TaskPriority) -> Bool {
+    lhs.rawValue == rhs.rawValue
+  }
+
+  public static func != (lhs: TaskPriority, rhs: TaskPriority) -> Bool {
+    lhs.rawValue != rhs.rawValue
+  }
+}
+
+@available(SwiftStdlib 5.1, *)
+extension TaskPriority: Comparable {
+  public static func < (lhs: TaskPriority, rhs: TaskPriority) -> Bool {
+    lhs.rawValue < rhs.rawValue
+  }
+
+  public static func <= (lhs: TaskPriority, rhs: TaskPriority) -> Bool {
+    lhs.rawValue <= rhs.rawValue
+  }
+
+  public static func > (lhs: TaskPriority, rhs: TaskPriority) -> Bool {
+    lhs.rawValue > rhs.rawValue
+  }
+
+  public static func >= (lhs: TaskPriority, rhs: TaskPriority) -> Bool {
+    lhs.rawValue >= rhs.rawValue
+  }
+}
+
+
 // MARK: - Task
 
 // extension Task where Success == Never, Failure == Never {
@@ -145,6 +264,10 @@ extension ContinuousClock.Instant: InstantProtocol {
 
   public func duration(to other: ContinuousClock.Instant) -> Swift.Duration {
     other._value - _value
+  }
+
+  public func duration(from other: ContinuousClock.Instant) -> Swift.Duration {
+    _value - other._value
   }
 
   public func hash(into hasher: inout Hasher) {

@@ -7,9 +7,13 @@
 /// bodies get recomputed. The root node is type-erased because otherwise the selected backend
 /// would have to get propagated through the entire scene graph which would leak it into
 /// ``Scene`` implementations (exposing users to unnecessary internal details).
+@MainActor
 public class ViewGraph<Root: View> {
     /// The view graph's
     public typealias RootNode = AnyViewGraphNode<Root>
+
+    /// A reference to the backend used by this view graph.
+    private var backend: _UnsafeAnyAppBackend
 
     /// The root node storing the node for the root view's body.
     public var rootNode: RootNode
@@ -72,6 +76,6 @@ public class ViewGraph<Root: View> {
     }
 
     public func snapshot() -> ViewGraphSnapshotter.NodeSnapshot {
-        ViewGraphSnapshotter.snapshot(of: rootNode)
+        ViewGraphSnapshotter.snapshot(of: rootNode, backend: backend)
     }
 }

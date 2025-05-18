@@ -4,16 +4,17 @@ extension View {
     /// `onDisappear` actions on outermost views are called first and propagate
     /// down to the leaf views due to essentially relying on the `deinit` of the
     /// modifier view's ``ViewGraphNode``.
-    public func onDisappear(perform action: @escaping () -> Void) -> some View {
+    public nonisolated func onDisappear(perform action: @escaping @Sendable () -> Void) -> some View {
         OnDisappearModifier(body: TupleView1(self), action: action)
     }
 }
 
-@View
+@View(checkConformance: false)
 struct OnDisappearModifier<Content: View> {
     var body: TupleView1<Content>
-    var action: () -> Void
+    var action: @Sendable () -> Void
 
+    @MainActor
     func children<Backend: AppBackend>(
         backend: Backend,
         snapshots: [ViewGraphSnapshotter.NodeSnapshot]?,
@@ -29,6 +30,7 @@ struct OnDisappearModifier<Content: View> {
         )
     }
 
+    @MainActor
     func layoutableChildren<Backend: AppBackend>(
         backend: Backend,
         children: OnDisappearModifierChildren
@@ -39,6 +41,7 @@ struct OnDisappearModifier<Content: View> {
         )
     }
 
+    @MainActor
     func asWidget<Backend: AppBackend>(
         _ children: OnDisappearModifierChildren,
         backend: Backend
@@ -46,6 +49,7 @@ struct OnDisappearModifier<Content: View> {
         defaultAsWidget(children.wrappedChildren, backend: backend)
     }
 
+    @MainActor
     func update<Backend: AppBackend>(
         _ widget: Backend.Widget,
         children: OnDisappearModifierChildren,
@@ -65,9 +69,9 @@ struct OnDisappearModifier<Content: View> {
     }
 }
 
-class OnDisappearModifierChildren: ViewGraphNodeChildren {
-    var wrappedChildren: any ViewGraphNodeChildren
-    var action: () -> Void
+final class OnDisappearModifierChildren: ViewGraphNodeChildren {
+    let wrappedChildren: any ViewGraphNodeChildren
+    var action: @Sendable () -> Void
 
     var widgets: [AnyWidget] {
         wrappedChildren.widgets
@@ -79,13 +83,16 @@ class OnDisappearModifierChildren: ViewGraphNodeChildren {
 
     init(
         wrappedChildren: any ViewGraphNodeChildren,
-        action: @escaping () -> Void
+        action: @escaping @Sendable () -> Void
     ) {
         self.wrappedChildren = wrappedChildren
         self.action = action
     }
 
-    deinit {
+    isolated deinit {
+        for child in wrappedChildren.erasedNodes {
+            child.destroy()
+        }
         action()
     }
 }

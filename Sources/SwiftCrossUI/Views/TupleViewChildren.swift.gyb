@@ -14,7 +14,7 @@ variadic_type_parameters = ", ".join(children)
 
 /// A fixed-length strongly-typed collection of ${i + 1} child nodes. A counterpart to
 /// ``TupleView${i + 1}``.
-public struct TupleViewChildren${i + 1}<${struct_type_parameters}>: ViewGraphNodeChildren {
+public final class TupleViewChildren${i + 1}<${struct_type_parameters}>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             % for child in children:
@@ -58,6 +58,13 @@ public struct TupleViewChildren${i + 1}<${struct_type_parameters}>: ViewGraphNod
             snapshot: snapshots[${j}],
             environment: environment
         )
+        % end
+    }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        % for child in children:
+        ${child.lower()}.destroy()
         % end
     }
 }

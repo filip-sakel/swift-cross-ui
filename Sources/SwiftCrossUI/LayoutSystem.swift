@@ -1,4 +1,6 @@
+@MainActor
 public enum LayoutSystem {
+    @MainActor
     public struct LayoutableChild {
         private var update:
             (

@@ -1,5 +1,5 @@
 @Shape
-public struct Ellipse {
+public struct Ellipse: Shape {
     public init() {}
 
     public func path(in bounds: Path.Rect) -> Path {

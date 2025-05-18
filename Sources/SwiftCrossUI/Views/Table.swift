@@ -1,6 +1,6 @@
 /// A container that presents rows of data arranged in columns.
 @View
-public struct Table<RowValue, RowContent: TableRowContent<RowValue>>: TypeSafeView {
+public struct Table<RowValue, RowContent: TableRowContent<RowValue>>: View, TypeSafeView {
     typealias Children = TableViewChildren<RowContent.RowContent>
 
     public var body = EmptyView()
@@ -147,7 +147,7 @@ public struct Table<RowValue, RowContent: TableRowContent<RowValue>>: TypeSafeVi
     }
 }
 
-class TableViewChildren<RowContent: View>: ViewGraphNodeChildren {
+final class TableViewChildren<RowContent: View>: ViewGraphNodeChildren {
     var rowNodes: [AnyViewGraphNode<RowView<RowContent>>] = []
     var cellContainerWidgets: [AnyWidget] = []
 
@@ -164,11 +164,17 @@ class TableViewChildren<RowContent: View>: ViewGraphNodeChildren {
         rowNodes = []
         cellContainerWidgets = []
     }
+
+    isolated deinit {
+        for rowNode in rowNodes {
+            rowNode.destroy()
+        }
+    }
 }
 
 /// An empty view that simply manages a row's children. Not intended to be rendered directly.
 @View
-struct RowView<Content: View> {
+struct RowView<Content: View>: View {
     var body: Content
 
     init(_ content: Content) {

@@ -1,15 +1,17 @@
+
+
 /// A fixed-length strongly-typed collection of 1 child nodes. A counterpart to
 /// ``TupleView1``.
-public struct TupleViewChildren1<Child0: View>: ViewGraphNodeChildren {
+public final class TupleViewChildren1<Child0: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
-            child0.widget
+            child0.widget,
         ]
     }
 
     public var erasedNodes: [ErasedViewGraphNode] {
         return [
-            ErasedViewGraphNode(wrapping: child0)
+            ErasedViewGraphNode(wrapping: child0),
         ]
     }
 
@@ -24,7 +26,7 @@ public struct TupleViewChildren1<Child0: View>: ViewGraphNodeChildren {
         environment: EnvironmentValues
     ) {
         let viewTypeNames = [
-            ViewGraphSnapshotter.name(of: Child0.self)
+            ViewGraphSnapshotter.name(of: Child0.self),
         ]
         let snapshots = ViewGraphSnapshotter.match(snapshots ?? [], to: viewTypeNames)
         self.child0 = AnyViewGraphNode(
@@ -34,11 +36,16 @@ public struct TupleViewChildren1<Child0: View>: ViewGraphNodeChildren {
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 2 child nodes. A counterpart to
 /// ``TupleView2``.
-public struct TupleViewChildren2<Child0: View, Child1: View>: ViewGraphNodeChildren {
+public final class TupleViewChildren2<Child0: View, Child1: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -84,11 +91,17 @@ public struct TupleViewChildren2<Child0: View, Child1: View>: ViewGraphNodeChild
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 3 child nodes. A counterpart to
 /// ``TupleView3``.
-public struct TupleViewChildren3<Child0: View, Child1: View, Child2: View>: ViewGraphNodeChildren {
+public final class TupleViewChildren3<Child0: View, Child1: View, Child2: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -146,13 +159,18 @@ public struct TupleViewChildren3<Child0: View, Child1: View, Child2: View>: View
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 4 child nodes. A counterpart to
 /// ``TupleView4``.
-public struct TupleViewChildren4<Child0: View, Child1: View, Child2: View, Child3: View>:
-    ViewGraphNodeChildren
-{
+public final class TupleViewChildren4<Child0: View, Child1: View, Child2: View, Child3: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -222,13 +240,19 @@ public struct TupleViewChildren4<Child0: View, Child1: View, Child2: View, Child
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 5 child nodes. A counterpart to
 /// ``TupleView5``.
-public struct TupleViewChildren5<
-    Child0: View, Child1: View, Child2: View, Child3: View, Child4: View
->: ViewGraphNodeChildren {
+public final class TupleViewChildren5<Child0: View, Child1: View, Child2: View, Child3: View, Child4: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -310,13 +334,20 @@ public struct TupleViewChildren5<
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+        child4.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 6 child nodes. A counterpart to
 /// ``TupleView6``.
-public struct TupleViewChildren6<
-    Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View
->: ViewGraphNodeChildren {
+public final class TupleViewChildren6<Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -410,13 +441,21 @@ public struct TupleViewChildren6<
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+        child4.destroy()
+        child5.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 7 child nodes. A counterpart to
 /// ``TupleView7``.
-public struct TupleViewChildren7<
-    Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View, Child6: View
->: ViewGraphNodeChildren {
+public final class TupleViewChildren7<Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View, Child6: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -522,14 +561,22 @@ public struct TupleViewChildren7<
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+        child4.destroy()
+        child5.destroy()
+        child6.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 8 child nodes. A counterpart to
 /// ``TupleView8``.
-public struct TupleViewChildren8<
-    Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View,
-    Child6: View, Child7: View
->: ViewGraphNodeChildren {
+public final class TupleViewChildren8<Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View, Child6: View, Child7: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -647,14 +694,23 @@ public struct TupleViewChildren8<
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+        child4.destroy()
+        child5.destroy()
+        child6.destroy()
+        child7.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 9 child nodes. A counterpart to
 /// ``TupleView9``.
-public struct TupleViewChildren9<
-    Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View,
-    Child6: View, Child7: View, Child8: View
->: ViewGraphNodeChildren {
+public final class TupleViewChildren9<Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View, Child6: View, Child7: View, Child8: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -784,14 +840,24 @@ public struct TupleViewChildren9<
             environment: environment
         )
     }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+        child4.destroy()
+        child5.destroy()
+        child6.destroy()
+        child7.destroy()
+        child8.destroy()
+    }
 }
 
 /// A fixed-length strongly-typed collection of 10 child nodes. A counterpart to
 /// ``TupleView10``.
-public struct TupleViewChildren10<
-    Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View,
-    Child6: View, Child7: View, Child8: View, Child9: View
->: ViewGraphNodeChildren {
+public final class TupleViewChildren10<Child0: View, Child1: View, Child2: View, Child3: View, Child4: View, Child5: View, Child6: View, Child7: View, Child8: View, Child9: View>: ViewGraphNodeChildren {
     public var widgets: [AnyWidget] {
         return [
             child0.widget,
@@ -932,5 +998,19 @@ public struct TupleViewChildren10<
             snapshot: snapshots[9],
             environment: environment
         )
+    }
+
+    isolated deinit {
+        // Make sure to destory all the children, removing them from the node graph.
+        child0.destroy()
+        child1.destroy()
+        child2.destroy()
+        child3.destroy()
+        child4.destroy()
+        child5.destroy()
+        child6.destroy()
+        child7.destroy()
+        child8.destroy()
+        child9.destroy()
     }
 }

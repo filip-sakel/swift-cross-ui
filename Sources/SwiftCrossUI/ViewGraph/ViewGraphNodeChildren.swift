@@ -2,7 +2,8 @@
 /// types for various purposes. E.g. variable length with same-typed elements
 /// (``ForEach``), and fixed length with distinctly-typed elements (``TupleView1``,
 /// ``TupleView2``, etc).
-public protocol ViewGraphNodeChildren {
+@MainActor
+public protocol ViewGraphNodeChildren: AnyObject {
     /// The widget of the children. Type-erased to avoid the type of the currently
     /// selected backend leaking into the ``View`` protocol, requiring users to
     /// engage with annoying complexity and reducing ease of backend switching.

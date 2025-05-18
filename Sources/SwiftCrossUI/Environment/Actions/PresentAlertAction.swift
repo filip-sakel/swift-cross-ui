@@ -3,6 +3,7 @@
 /// selected action. By default, the alert will have a single button labelled
 /// `OK`. All buttons will dismiss the alert even if you provide your own
 /// actions.
+@MainActor
 public struct PresentAlertAction {
     let environment: EnvironmentValues
 
@@ -13,9 +14,10 @@ public struct PresentAlertAction {
     ) async -> Int {
         let actions = actions()
 
+        @MainActor
         func presentAlert<Backend: AppBackend>(backend: Backend) async -> Int {
-            await withCheckedContinuation { continuation in
-                backend.runInMainThread {
+            await withCheckedContinuation { @MainActor continuation in
+                backend.runInMainThread { @MainActor in
                     let alert = backend.createAlert()
                     backend.updateAlert(
                         alert,

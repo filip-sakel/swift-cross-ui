@@ -3,7 +3,7 @@
 /// Due to technical limitations, the minimum supported OS's for menu buttons in UIKitBackend
 /// are iOS 14 and tvOS 17.
 @View(checkBody: false)
-public struct Menu {
+public struct Menu: View {
     public var label: String
     public var items: [MenuItem]
 
@@ -42,6 +42,8 @@ public struct Menu {
 @available(iOS 14, macCatalyst 14, tvOS 17, *)
 extension Menu: TypeSafeView {
     public var body: EmptyView { return EmptyView() }
+
+    internal typealias Children = MenuStorage
 
     func children<Backend: AppBackend>(
         backend: Backend,
@@ -137,7 +139,7 @@ extension Menu: TypeSafeView {
     }
 }
 
-class MenuStorage: ViewGraphNodeChildren {
+final class MenuStorage: ViewGraphNodeChildren {
     var menu: Any?
 
     var widgets: [AnyWidget] = []
@@ -158,5 +160,9 @@ class MenuStorage: ViewGraphNodeChildren {
             content: content,
             environment: environment
         )
+    }
+
+    deinit {
+        // No child nodes to destroy
     }
 }

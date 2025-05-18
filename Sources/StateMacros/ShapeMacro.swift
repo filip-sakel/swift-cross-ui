@@ -3,7 +3,7 @@ import SwiftSyntaxMacros
 import SwiftCompilerPlugin
 import SwiftDiagnostics
 
-public struct ShapeMacro: ExtensionMacro {
+public struct ShapeMacro: ExtensionMacro, MemberAttributeMacro {
     public static func expansion(
         of node: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
@@ -19,5 +19,14 @@ public struct ShapeMacro: ExtensionMacro {
         )
 
         return [extDecl]
+    }
+
+    public static func expansion(
+        of node: AttributeSyntax, 
+        attachedTo declaration: some DeclGroupSyntax, 
+        providingAttributesFor member: some DeclSyntaxProtocol, 
+        in context: some MacroExpansionContext
+    ) throws -> [AttributeSyntax] {
+        return ["@MainActor"]
     }
 }

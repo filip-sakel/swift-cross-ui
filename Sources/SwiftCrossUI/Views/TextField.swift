@@ -1,13 +1,13 @@
 /// A control that displays an editable text interface.
 @View(checkBody: false)
-public struct TextField: ElementaryView {
+public struct TextField: View, ElementaryView {
     /// The label to show when the field is empty.
     private var placeholder: String
     /// The field's content.
     private var value: Binding<String>?
 
     /// Creates an editable text field with a given placeholder.
-    public init(_ placeholder: String = "", text: Binding<String>) {
+    public nonisolated init(_ placeholder: String = "", text: Binding<String>) {
         self.placeholder = placeholder
         self.value = text
     }

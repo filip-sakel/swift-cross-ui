@@ -5,16 +5,17 @@
 public macro DynamicProperty() =
     #externalMacro(module: "StateMacros", type: "DynamicPropertyMacro")
 
-@attached(memberAttribute)
+// @attached(memberAttribute)
 @attached(extension, conformances: View, names: named(_name), named(_observeState), named(_updateDynamicProperties))
-public macro View(checkBody: _const Bool = true) =
+public macro View(checkBody: _const Bool = true, checkConformance: _const Bool = true) =
     #externalMacro(module: "StateMacros", type: "ViewMacro")
 
-@attached(memberAttribute)
+// @attached(memberAttribute)
 @attached(extension, conformances: App, names: named(_name), named(_observeState), named(_updateDynamicProperties))
 public macro App() =
     #externalMacro(module: "StateMacros", type: "AppMacro")
 
+// @attached(memberAttribute)
 @attached(extension, conformances: Shape, names: named(_name), named(_observeState), named(_updateDynamicProperties))
 public macro Shape() =
     #externalMacro(module: "StateMacros", type: "ShapeMacro")
@@ -62,7 +63,7 @@ struct MyDynProp {
 }
 
 @View
-struct MyView<T: View, U> {
+struct MyView<T: View, U>: View {
     let name: String 
     @State var state: String
     let state2: State<String>
@@ -74,7 +75,7 @@ struct MyView<T: View, U> {
 }
 
 @View(checkBody: false)
-struct MyView2<T: View, U>: ElementaryView {
+struct MyView2<T: View, U>: View, ElementaryView {
     struct MyVector {
         var x = 0.0
         var y = 0.0
@@ -98,7 +99,7 @@ struct MyView2<T: View, U>: ElementaryView {
 }
 
 @View
-struct MyView3 {
+struct MyView3: View {
     @State var state: String
     static var state2: State<String> = State(wrappedValue: "Hello")
 
@@ -111,7 +112,7 @@ struct MyView3 {
 }
 
 @View 
-struct MyView4 {
+struct MyView4: View {
     @State var state: String
     static var state2: State<String> = State(wrappedValue: "Hello")
 

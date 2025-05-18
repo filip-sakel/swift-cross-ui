@@ -185,7 +185,7 @@ extension ForEach: TypeSafeView, View where Child: View {
 ///
 /// Most of the complexity comes from resizing the list widget and moving around elements
 /// when elements are added/removed.
-class ForEachViewChildren<
+final class ForEachViewChildren<
     Items: Collection,
     Child: View
 >: ViewGraphNodeChildren where Items.Index == Int {
@@ -221,13 +221,18 @@ class ForEachViewChildren<
             .enumerated()
             .map { (index, child) in
                 let snapshot = index < snapshots?.count ?? 0 ? snapshots?[index] : nil
-                return ViewGraphNode(
+                return AnyViewGraphNode(ViewGraphNode(
                     for: child,
                     backend: backend,
                     snapshot: snapshot,
                     environment: environment
-                )
+                ), backend: backend)
             }
-            .map(AnyViewGraphNode.init(_:))
+    }
+
+    isolated deinit {
+        for node in nodes {
+            node.destroy()
+        }
     }
 }

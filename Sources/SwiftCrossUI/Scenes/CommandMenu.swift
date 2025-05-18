@@ -1,3 +1,4 @@
+@MainActor
 public struct CommandMenu {
     var name: String
     var content: [MenuItem]

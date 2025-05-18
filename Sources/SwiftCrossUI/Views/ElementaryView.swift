@@ -1,6 +1,7 @@
 /// A complimentary protocol for ``View`` to simplify implementation of
 /// elementary (i.e. atomic) views which have no children. Think of them
 /// as the leaves at the end of the view tree.
+@MainActor
 protocol ElementaryView: View where Content == EmptyView {
     func asWidget<Backend: AppBackend>(
         backend: Backend
@@ -16,6 +17,7 @@ protocol ElementaryView: View where Content == EmptyView {
 }
 
 extension ElementaryView {
+    @MainActor
     public var body: EmptyView {
         return EmptyView()
     }

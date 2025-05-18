@@ -1,11 +1,12 @@
 /// A view that can be rendered by any backend.
 // FIXME: Just replicate _DynamicPropertyContainer here instead of using it as a protocol constraint
+@MainActor @preconcurrency
 public protocol View {
     /// The view's content (composed of other views).
     associatedtype Content: View
 
     /// The view's contents.
-    @ViewBuilder var body: Content { get }
+    @ViewBuilder @MainActor @preconcurrency var body: Content { get }
 
     /// Gets the view's children as a type-erased collection of view graph nodes. Type-erased
     /// to avoid leaking complex requirements to users implementing their own regular views.
@@ -76,7 +77,7 @@ public protocol View {
     // view is removed from the view graph.
     func _observeState() -> [_AnyStateProperty]
 
-    static func _name() -> String
+    nonisolated static func _name() -> String
 }
 
 #if !hasFeature(Embedded) 

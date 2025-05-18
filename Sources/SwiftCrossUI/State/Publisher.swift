@@ -8,10 +8,15 @@ actor UpdateThrottler {
     private var isProcessing = false
     private let clock = ContinuousClock()
 
+    func setIsProcessing(_ isProcessing: Bool) {
+        self.isProcessing = isProcessing
+    }  
+
     func attemptUpdate(
-        backend: some AppBackend,
-        _ closure: @escaping () -> Void
+        backend: sending some AppBackend,
+        _ closure: sending @escaping () -> Void
     ) async {
+        #if !hasFeature(Embedded)
         guard !isProcessing else {
             lastUpdateMergeTime = clock.now
             return
@@ -20,7 +25,7 @@ actor UpdateThrottler {
         isProcessing = true
 
         await Task.detached(priority: .userInitiated) {
-            await backend.runInMainThread {
+            await backend.runInMainThread { @MainActor in
                 let start = self.clock.now
                 closure()
                 let elapsed = self.clock.now.duration(to: start)
@@ -31,11 +36,13 @@ actor UpdateThrottler {
             }
 
             await self.handleThrottling()
-            self.isProcessing = false
+            await self.setIsProcessing(false)
         }.value
+        #else 
+        #warning("Reenable after resolving compiler crasher.")
+        #endif
     }
 
-    @MainActor
     private func updateThrottlingMetrics(elapsed: Duration) {
         exponentiallySmoothedUpdateLength =
             (elapsed + exponentiallySmoothedUpdateLength) / 2
@@ -148,13 +155,13 @@ public class Publisher {
     /// guaranteed that updates will always run serially.
     func observeAsUIUpdater<Backend: AppBackend>(
         backend: Backend,
-        action closure: @escaping () -> Void
+        action closure: sending @escaping () -> Void
     ) -> Cancellable {
 #if hasFeature(Embedded) && canImport(_Concurrency)
         let throttler = UpdateThrottler()
 
         return observe {
-            _Concurrency.Task {
+            Task {
                 await throttler.attemptUpdate(backend: backend, closure)
             }
         }

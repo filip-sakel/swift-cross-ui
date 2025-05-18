@@ -3,6 +3,7 @@
 /// A top-level wrapper providing an entry point for the app. Exists to be able to persist
 /// the view graph alongside the app (we can't do that on a user's `App` implementation because
 /// we can only add computed properties).
+@MainActor
 class _App<AppRoot: App> {
     /// The app being run.
     let app: AppRoot
@@ -80,10 +81,11 @@ class _App<AppRoot: App> {
             // Subscribe to the app's state properties
             let states = self.app._observeState()
             self.cancellables = states.map { state in
+                #warning("Conditionalize for Embedded only.")
                 // FIXME: Technically taking a strong reference to self causes a retain cycle
                 // but the app should never be deallocated while the backend is running so this shouldn't
                 // be a problem. We should probably use a weak reference to self here.
-                state.didChange.observeAsUIUpdater(backend: self.backend) {
+                state.didChange.observeAsUIUpdater(backend: self.backend) { @MainActor
                     [self] in
                     // guard let self = self else { return }
 
@@ -105,4 +107,17 @@ class _App<AppRoot: App> {
             }
         }
     }
+}
+
+
+struct _AppGlobalState {
+    /// Force refresh the entire scene graph. Used by hot reloading. If you need to do
+    /// this in your own code then something has gone very wrong...
+    internal var _forceRefresh: () -> Void = {}
+
+    /// Metadata embedded by Swift Bundler if present. Loaded at app start up.
+    internal var swiftBundlerAppMetadata: AppMetadata? = nil
+
+    @MainActor
+    public static var shared = _AppGlobalState()
 }

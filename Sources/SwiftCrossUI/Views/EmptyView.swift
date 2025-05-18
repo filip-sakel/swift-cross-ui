@@ -1,14 +1,26 @@
 /// A placeholder view used by elementary ``View`` implementations which don't have bodies. Fatally
 /// crashes if rendered.
-@View
-public struct EmptyView {
+public struct EmptyView: View {
     public var body: Never {
         return fatalError("Rendered EmptyView")
     }
 
+    public func _updateDynamicProperties(with environment: EnvironmentValues, previousValue: EmptyView?) {
+        // No dynamic properties to update
+    }
+
+    public func _observeState() -> [_AnyStateProperty] {
+        // No state to observe
+        []
+    }
+
+    public nonisolated static func _name() -> String {
+        return "EmptyView"
+    }
+
     /// Creates a placeholder view (will crash if used in a ``View`` that doesn't override the default
     /// widget creation code, not intended for regular use).
-    public init() {}
+    public nonisolated init() {}
 
     public func children<Backend: AppBackend>(
         backend: Backend,
@@ -50,12 +62,15 @@ public struct EmptyView {
 }
 
 /// The children of a node with no children.
-public struct EmptyViewChildren: ViewGraphNodeChildren {
+public final class EmptyViewChildren: ViewGraphNodeChildren {
     public let widgets: [AnyWidget] = []
     public let erasedNodes: [ErasedViewGraphNode] = []
 
     /// Creates an empty collection of children for a node with no children.
     public init() {}
+
+    // No nodes to destroy
+    deinit {}
 }
 
 /// Used as the body of ``EmptyView`` to end the chain of view bodies.

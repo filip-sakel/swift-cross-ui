@@ -5,7 +5,7 @@ import ImageFormats
 import struct FoundationEssentials.URL
 #else
 // FIXME: Implement
-public enum ImageFormats {
+public enum ImageFormats: Hashable {
     public struct Image<T>: Hashable {
         var width: Int
         var height: Int
@@ -30,7 +30,7 @@ public typealias RGBA = Void
 
 /// A view that displays an image.
 @View
-public struct Image: TypeSafeView {
+public struct Image: View, TypeSafeView {
     private var isResizable = false
     private var source: Source
 
@@ -182,7 +182,7 @@ public struct Image: TypeSafeView {
     }
 }
 
-class _ImageChildren: ViewGraphNodeChildren {
+final class _ImageChildren: ViewGraphNodeChildren {
     var cachedImageSource: Image.Source? = nil
     var cachedImage: ImageFormats.Image<RGBA>? = nil
     var cachedImageDisplaySize: SIMD2<Int> = .zero
@@ -199,4 +199,8 @@ class _ImageChildren: ViewGraphNodeChildren {
 
     var widgets: [AnyWidget] = []
     var erasedNodes: [ErasedViewGraphNode] = []
+
+    deinit {
+        // No need to destroy the child erased nodes (there aren't any)
+    }
 }

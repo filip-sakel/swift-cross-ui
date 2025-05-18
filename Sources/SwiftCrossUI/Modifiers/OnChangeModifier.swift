@@ -1,5 +1,5 @@
 extension View {
-    public func onChange<Value: Equatable>(
+    public nonisolated func onChange<Value: Equatable>(
         of value: Value,
         initial: Bool = false,
         perform action: @escaping () -> Void
@@ -13,7 +13,7 @@ extension View {
     }
 }
 
-@View
+@View(checkConformance: false)
 struct OnChangeModifier<Value: Equatable, Content: View> {
     // TODO: This probably doesn't have to trigger view updates. We're only
     //   really using @State here to persist the data.
@@ -25,6 +25,7 @@ struct OnChangeModifier<Value: Equatable, Content: View> {
     var action: () -> Void
     var initial: Bool
 
+    @MainActor
     func update<Backend: AppBackend>(
         _ widget: Backend.Widget,
         children: any ViewGraphNodeChildren,

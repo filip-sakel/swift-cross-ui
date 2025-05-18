@@ -36,6 +36,6 @@ public struct AppMacro: ExtensionMacro, MemberAttributeMacro {
             return []
         }
 
-        return [attribute]
+        return [attribute] + ["@MainActor"]
     }
 }

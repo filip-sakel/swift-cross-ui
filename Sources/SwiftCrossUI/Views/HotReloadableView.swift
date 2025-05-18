@@ -9,19 +9,34 @@
 /// Only expected to be used directly by SwiftCrossUI itself or third
 /// party libraries extending SwiftCrossUI's hot reloading capabilities.
 @View
-public struct HotReloadableView: TypeSafeView {
+public struct HotReloadableView: View, TypeSafeView {
     typealias Children = HotReloadableViewChildren
 
     public var body = EmptyView()
 
-    var child: any View
+    var child: _UnsafeAnyType
+    var childTypeName: String
+    var getChildNode: (
+        _ backend: _UnsafeAnyAppBackend,
+        _ environment: EnvironmentValues,
+        _ snapshot: ViewGraphSnapshotter.NodeSnapshot?
+    ) -> ErasedViewGraphNode
 
-    public init(_ child: any View) {
-        self.child = child
+    public init<V: View>(_ child: V) {
+        self.child = _UnsafeAnyType(child)
+        self.childTypeName = V._name()
+        self.getChildNode = { backend, environment, snapshot in
+            ErasedViewGraphNode(
+                for: child,
+                backend: backend,
+                snapshot: snapshot,
+                environment: environment
+            )
+        }
     }
 
-    public init(@ViewBuilder _ child: () -> some View) {
-        self.child = child()
+    public init<V: View>(@ViewBuilder _ child: () -> V) {
+        self.init(child())
     }
 
     func children<Backend: AppBackend>(
@@ -31,10 +46,11 @@ public struct HotReloadableView: TypeSafeView {
     ) -> HotReloadableViewChildren {
         let snapshot = snapshots?.count == 1 ? snapshots?.first : nil
         return HotReloadableViewChildren(
-            from: self,
-            backend: backend,
-            snapshot: snapshot,
-            environment: environment
+            node: getChildNode(
+                backend.erased,
+                environment,
+                snapshot
+            )
         )
     }
 
@@ -61,6 +77,7 @@ public struct HotReloadableView: TypeSafeView {
         dryRun: Bool
     ) -> ViewUpdateResult {
         var (viewTypeMatched, result) = children.node.updateWithNewView(
+            childTypeName, 
             child,
             proposedSize,
             environment,
@@ -69,17 +86,17 @@ public struct HotReloadableView: TypeSafeView {
 
         if !viewTypeMatched {
             let snapshotter = ViewGraphSnapshotter()
-            let snapshot = children.node.transform(with: snapshotter)
-            children.node = ErasedViewGraphNode(
-                for: child,
-                backend: backend,
-                snapshot: snapshot,
-                environment: environment
+            let snapshot = children.node.transform(with: snapshotter, backend: backend)
+            children.node = getChildNode(
+                backend.erased,
+                environment,
+                snapshot
             )
 
             // We can assume that the view types match since we just recreated the view
             // on the line above.
             let (_, newResult) = children.node.updateWithNewView(
+                childTypeName, 
                 child,
                 proposedSize,
                 environment,
@@ -104,7 +121,7 @@ public struct HotReloadableView: TypeSafeView {
     }
 }
 
-class HotReloadableViewChildren: ViewGraphNodeChildren {
+final class HotReloadableViewChildren: ViewGraphNodeChildren {
     /// The erased underlying node.
     var node: ErasedViewGraphNode
 
@@ -119,17 +136,11 @@ class HotReloadableViewChildren: ViewGraphNodeChildren {
     var hasChangedChild = true
 
     /// Creates the erased child node and wraps the child's widget in a single-child container.
-    init<Backend: AppBackend>(
-        from view: HotReloadableView,
-        backend: Backend,
-        snapshot: ViewGraphSnapshotter.NodeSnapshot?,
-        environment: EnvironmentValues
-    ) {
-        node = ErasedViewGraphNode(
-            for: view.child,
-            backend: backend,
-            snapshot: snapshot,
-            environment: environment
-        )
+    init(node: ErasedViewGraphNode) {
+        self.node = node
+    }
+
+    isolated deinit {
+        node.destroy()
     }
 }

@@ -1,15 +1,15 @@
 /// A control that initiates an action.
 @View(checkBody: false)
-public struct Button: ElementaryView {
+public struct Button: View, ElementaryView {
     /// The label to show on the button.
     package var label: String
     /// The action to be performed when the button is clicked.
-    package var action: () -> Void
+    package var action: @MainActor () -> Void
     /// The button's forced width if provided.
     var width: Int?
 
     /// Creates a button that displays a custom label.
-    public init(_ label: String, action: @escaping () -> Void = {}) {
+    public nonisolated init(_ label: String, action: @MainActor @escaping () -> Void = {}) {
         self.label = label
         self.action = action
     }

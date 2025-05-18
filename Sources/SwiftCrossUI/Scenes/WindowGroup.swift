@@ -32,7 +32,7 @@ public struct WindowGroup<Content: View>: Scene {
     /// to `ProcessInfo.processInfo.processName`.
     public init(_ title: String? = nil, @ViewBuilder _ content: @escaping () -> Content) {
         self.content = content
-        #if os(WASI)
+        #if hasFeature(Embedded) || os(WASI)
             self.title = title ?? "Title"
         #else
             self.title = title ?? ProcessInfo.processInfo.processName

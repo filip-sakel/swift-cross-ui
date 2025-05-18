@@ -1,6 +1,6 @@
 /// A view used by ``ViewBuilder`` to support non-exhaustive if statements.
-@View
-public struct OptionalView<V: View>: TypeSafeView {
+@View(checkConformance: false)
+public struct OptionalView<V: View> {
     typealias Children = OptionalViewChildren<V>
 
     public var body = EmptyView()
@@ -8,10 +8,12 @@ public struct OptionalView<V: View>: TypeSafeView {
     var view: V?
 
     /// Wraps an optional view.
-    init(_ view: V?) {
+    nonisolated init(_ view: V?) {
         self.view = view
     }
+}
 
+extension OptionalView: TypeSafeView {
     func children<Backend: AppBackend>(
         backend: Backend,
         snapshots: [ViewGraphSnapshotter.NodeSnapshot]?,
@@ -95,7 +97,7 @@ public struct OptionalView<V: View>: TypeSafeView {
 
 /// Stores a view graph node for the view's child if present. Tracks whether
 /// the child has toggled since last time the parent was updated or not.
-class OptionalViewChildren<V: View>: ViewGraphNodeChildren {
+final class OptionalViewChildren<V: View>: ViewGraphNodeChildren {
     /// The view graph node for the view's child if present.
     var node: AnyViewGraphNode<V>?
     /// Whether the view has toggled since the last non-dryrun update. `true`
@@ -130,5 +132,9 @@ class OptionalViewChildren<V: View>: ViewGraphNodeChildren {
                 environment: environment
             )
         }
+    }
+
+    isolated deinit {
+        node?.destroy()
     }
 }

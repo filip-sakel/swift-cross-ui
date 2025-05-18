@@ -1,6 +1,6 @@
 /// A view used by ``ViewBuilder`` to support if/else conditional statements.
-@View
-public struct EitherView<A: View, B: View>: TypeSafeView {
+@View(checkConformance: false)
+public struct EitherView<A: View, B: View> {
     typealias NodeChildren = EitherViewChildren<A, B>
 
     public var body = EmptyView()
@@ -14,15 +14,17 @@ public struct EitherView<A: View, B: View>: TypeSafeView {
     var storage: Storage
 
     /// Creates an either view with its first case visible initially.
-    init(_ a: A) {
+    nonisolated init(_ a: A) {
         storage = .a(a)
     }
 
     /// Creates an either view with its second case visible initially.
-    init(_ b: B) {
+    nonisolated init(_ b: B) {
         storage = .b(b)
     }
+}
 
+extension EitherView: TypeSafeView {
     func children<Backend: AppBackend>(
         backend: Backend,
         snapshots: [ViewGraphSnapshotter.NodeSnapshot]?,
@@ -123,8 +125,9 @@ public struct EitherView<A: View, B: View>: TypeSafeView {
 }
 
 /// Uses an `enum` to store a view graph node for one of two possible child view types.
-class EitherViewChildren<A: View, B: View>: ViewGraphNodeChildren {
+final class EitherViewChildren<A: View, B: View>: ViewGraphNodeChildren {
     /// A view graph node that wraps one of two possible child view types.
+    @MainActor
     enum EitherNode {
         case a(AnyViewGraphNode<A>)
         case b(AnyViewGraphNode<B>)
@@ -195,6 +198,15 @@ class EitherViewChildren<A: View, B: View>: ViewGraphNodeChildren {
                         environment: environment
                     )
                 )
+        }
+    }
+
+    isolated deinit {
+        switch node {
+            case let .a(nodeA):
+                nodeA.destroy()
+            case let .b(nodeB):
+                nodeB.destroy()
         }
     }
 }

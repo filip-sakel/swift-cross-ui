@@ -3,6 +3,7 @@
 /// The environment used when constructing scenes and views. Each scene or view
 /// gets to modify the environment before passing it on to its children, which
 /// is the basis of many view modifiers.
+@MainActor
 public struct EnvironmentValues {
     /// The current stack orientation. Inherited by ``ForEach`` and ``Group`` so
     /// that they can be used without affecting layout.
@@ -62,8 +63,9 @@ public struct EnvironmentValues {
     /// Brings the current window forward, not guaranteed to always bring
     /// the window to the top (due to focus stealing prevention).
     func bringWindowForward() {
+        @MainActor
         func activate<Backend: AppBackend>(with backend: Backend) {
-            backend.activate(window: window as! Backend.Window)
+            backend.activate(window: window!._window[Backend.Window.self])
         }
         activate(with: backend)
         print("Activated")
@@ -72,9 +74,9 @@ public struct EnvironmentValues {
     /// The backend's representation of the window that the current view is
     /// in, if any. This is a very internal detail that should never get
     /// exposed to users.
-    package var window: Any?
+    package var window: _UnsafeAnyAppBackend.Window?
     /// The backend in use. Mustn't change throughout the app's lifecycle.
-    let backend: any AppBackend
+    let backend: _UnsafeAnyAppBackend
 
     /// Presents an 'Open file' dialog fit for selecting a single file. Some
     /// backends only allow selecting either files or directories but not both
@@ -135,7 +137,7 @@ public struct EnvironmentValues {
 
     /// Creates the default environment.
     init<Backend: AppBackend>(backend: Backend) {
-        self.backend = backend
+        self.backend = backend.erased
 
         onResize = { _ in }
         layoutOrientation = .vertical

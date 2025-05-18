@@ -1,5 +1,6 @@
 // import Foundation
 
+@MainActor
 public struct PreferenceValues {
     public static let `default` = PreferenceValues(
         onOpenURL: nil

@@ -9,7 +9,7 @@ extension View {
     public nonisolated func task<Id: Equatable>(
         id: Id,
         priority: TaskPriority = .userInitiated,
-        _ action: @escaping () async -> Void
+        _ action: @Sendable @escaping () async -> Void
     ) -> some View {
         TaskModifier(
             id: id,
@@ -23,7 +23,7 @@ extension View {
     /// accessed), and cancels the task when the view disappears.
     public nonisolated func task(
         priority: TaskPriority = .userInitiated,
-        _ action: @escaping () async -> Void
+        _ action: @Sendable @escaping () async -> Void
     ) -> some View {
         TaskModifier(
             id: 0,
@@ -34,26 +34,39 @@ extension View {
     }
 }
 
-struct TaskModifier<Id: Equatable, Content: View>: View {
-    @State var task: Task<(), any Error>? = nil
+@View(checkBody: false, checkConformance: false)
+struct TaskModifier<Id: Equatable, Content: View> {
+    @State var task: Task<(), Never>? = nil
 
-    var id: Id
-    var content: Content
-    var priority: TaskPriority
-    var action: () async -> Void
+    let id: Id
+    let content: Content
+    let priority: TaskPriority
+    let action: @Sendable () async -> Void
 
+    nonisolated init(
+        id: Id,
+        content: sending Content,
+        priority: TaskPriority,
+        action: @Sendable @escaping () async -> Void
+    ) {
+        self.id = id
+        self.content = content
+        self.priority = priority
+        self.action = action
+    }
+    
     var body: some View {
         // Explicitly return to disable result builder (we don't want an extra
         // layer of views).
         return
             content
-            .onChange(of: id, initial: true) {
+            .onChange(of: id, initial: true) { [action] in
                 task?.cancel()
                 task = Task(priority: priority) {
                     await action()
                 }
             }
-            .onDisappear {
+            .onDisappear { [task] in
                 task?.cancel()
             }
     }

@@ -170,6 +170,7 @@ let package = Package(
                 .enableUpcomingFeature("StrictMemorySafety"),
                 .enableExperimentalFeature("AllowUnsafeAttribute"),
                 .enableExperimentalFeature("LifetimeDependence"),
+                .unsafeFlags(["-Xfrontend", "-strict-concurrency=minimal"]),
             ]
         ),
         .testTarget(

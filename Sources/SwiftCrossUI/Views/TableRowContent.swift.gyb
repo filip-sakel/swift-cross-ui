@@ -2,6 +2,7 @@
 maximum_column_count = 10
 }%
 
+@MainActor
 public protocol TableRowContent<RowValue> {
     associatedtype RowValue
     associatedtype RowContent: View

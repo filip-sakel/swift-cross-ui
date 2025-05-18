@@ -38,7 +38,7 @@ extension View {
 
 /// The implementation for the ``View/frame(width:height:)`` view modifier.
 @View
-struct StrictFrameView<Child: View>: TypeSafeView {
+struct StrictFrameView<Child: View>: View, TypeSafeView {
     var body: TupleView1<Child>
 
     /// The exact width to make the view.
@@ -154,7 +154,7 @@ struct StrictFrameView<Child: View>: TypeSafeView {
 
 /// The implementation for the ``View/frame(width:height:)`` view modifier.
 @View
-struct FlexibleFrameView<Child: View>: TypeSafeView {
+struct FlexibleFrameView<Child: View>: View, TypeSafeView {
     var body: TupleView1<Child>
 
     var minWidth: Int?

@@ -1,5 +1,6 @@
 /// The ``SceneGraphNode`` corresponding to a ``WindowGroup`` scene. Holds
 /// the scene's view graph and window handle.
+@MainActor
 public final class WindowGroupNode<Content: View>: SceneGraphNode {
     public typealias NodeScene = WindowGroup<Content>
 
@@ -29,9 +30,9 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
         viewGraph = ViewGraph(
             for: scene.body,
             backend: backend,
-            environment: environment.with(\.window, window)
+            environment: environment.with(\.window, _UnsafeAnyAppBackend.Window(_UnsafeAnyType(window)))
         )
-        let rootWidget = viewGraph.rootNode.concreteNode(for: Backend.self).widget
+        let rootWidget = viewGraph.rootNode.widget.into(Backend.Widget.self)
 
         let container = backend.createContainer()
         backend.addChild(rootWidget, to: container)
@@ -180,7 +181,7 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
                     environment: environment
                 )
             }
-            .with(\.window, window)
+            .with(\.window, _UnsafeAnyAppBackend.Window(window))
         #endif
 
         let dryRunResult: ViewUpdateResult?

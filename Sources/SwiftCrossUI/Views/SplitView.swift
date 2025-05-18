@@ -1,7 +1,7 @@
 // import Foundation
 
 @View
-struct SplitView<Sidebar: View, Detail: View>: TypeSafeView {
+struct SplitView<Sidebar: View, Detail: View>: View, TypeSafeView {
     typealias Children = SplitViewChildren<EnvironmentModifier<Sidebar>, Detail>
 
     var body: TupleView2<EnvironmentModifier<Sidebar>, Detail>
@@ -126,7 +126,7 @@ struct SplitView<Sidebar: View, Detail: View>: TypeSafeView {
     }
 }
 
-class SplitViewChildren<Sidebar: View, Detail: View>: ViewGraphNodeChildren {
+final class SplitViewChildren<Sidebar: View, Detail: View>: ViewGraphNodeChildren {
     var paneChildren: TupleView2<Sidebar, Detail>.Children
     var leadingPaneContainer: AnyWidget
     var trailingPaneContainer: AnyWidget
@@ -163,5 +163,11 @@ class SplitViewChildren<Sidebar: View, Detail: View>: ViewGraphNodeChildren {
 
     var trailingChild: AnyViewGraphNode<Detail> {
         paneChildren.child1
+    }
+
+    deinit {
+        // Since we strongly reference TupleView2<Sidebar, Detail>.Children 
+        // which automatically destroys its children upon deinitialization, we don't
+        // need to manually destroy the child nodes.
     }
 }

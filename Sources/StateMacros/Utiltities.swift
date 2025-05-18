@@ -71,7 +71,7 @@ func createNameMember(structDecl: StructDeclSyntax, type: some TypeSyntaxProtoco
     let typeName = "\(type)\(genericsSuffix)"
 
     let nameMethod: DeclSyntax = """
-        public static func _name() -> String {
+        public nonisolated static func _name() -> String {
             return "\(raw: typeName)"
         }
         """
@@ -137,7 +137,8 @@ func createUpdateMethod(structDecl: StructDeclSyntax, prelude: StmtSyntax? = nil
     return updateMethod
 }
 
-func assertNoConformance(
+func checkConformance(
+    assertExists: Bool,
     structDecl: StructDeclSyntax,
     protocolName: String,
     macroName: String,
@@ -149,12 +150,12 @@ func assertNoConformance(
         return type.name.text == protocolName
     } ?? false
 
-    if conformsToProtocol {
+    if !conformsToProtocol && assertExists {
         context.diagnose(
             Diagnostic(
                 node: structDecl.name,
                 message: SimpleDiagnosticMessage(
-                    message: "Type '\(structDecl.name)' redeclares conformance to '\(protocolName)' that's implied by the '\(macroName)' attribute.",
+                    message: "Type '\(structDecl.name)' doesn't declare conformance to '\(protocolName)' which is required by the '\(macroName)' attribute.",
                     severity: .error
                 )
             )
@@ -166,6 +167,7 @@ func assertNoConformance(
 
 func createDynamicPropertyExtension(
     protocolName: String,
+    assertConformance: Bool = true,
     typeDecl: some DeclGroupSyntax,
     type: some TypeSyntaxProtocol,
     context: some MacroExpansionContext
@@ -173,7 +175,8 @@ func createDynamicPropertyExtension(
     let structDecl = try extractStructDecl(from: typeDecl, macroName: protocolName)
 
     // Check if the struct already conforms to the protocol
-    let conformsToProtocol = assertNoConformance(
+    let conformsToProtocol = checkConformance(
+        assertExists: assertConformance,
         structDecl: structDecl, 
         protocolName: protocolName, macroName: "@\(protocolName)", 
         context: context
@@ -261,4 +264,40 @@ func annotateBuilderProperty(
     }
 
     return builderAttr
+}
+
+func annotateMainActor(
+    decl: some DeclSyntaxProtocol,
+    context: some MacroExpansionContext
+) -> AttributeSyntax? {
+    let attributes = decl.as(VariableDeclSyntax.self)?.attributes 
+        ?? decl.as(FunctionDeclSyntax.self)?.attributes 
+        ?? decl.as(InitializerDeclSyntax.self)?.attributes 
+        ?? decl.as(SubscriptDeclSyntax.self)?.attributes
+
+    let modifiers = decl.as(VariableDeclSyntax.self)?.modifiers 
+        ?? decl.as(FunctionDeclSyntax.self)?.modifiers 
+        ?? decl.as(InitializerDeclSyntax.self)?.modifiers 
+        ?? decl.as(SubscriptDeclSyntax.self)?.modifiers
+
+    // Check if it's a property, func, init, subscript
+    guard decl.is(VariableDeclSyntax.self) ||
+          decl.is(FunctionDeclSyntax.self) ||
+          decl.is(InitializerDeclSyntax.self) ||
+          decl.is(SubscriptDeclSyntax.self),
+          let attributes, let modifiers
+    else {
+        return nil
+    }
+
+    // Check if the property is already annotated with @MainActor
+    if attributes.contains(where: { $0.as(AttributeSyntax.self)?.attributeName.trimmedDescription == "MainActor" }) {
+        return nil
+    }
+    // Check if the property has `nonisolated` modifier
+    if modifiers.contains(where: { $0.name.text == "nonisolated" }) { 
+        return nil
+    }
+
+    return "@MainActor "
 }

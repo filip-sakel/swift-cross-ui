@@ -5,6 +5,7 @@
 public struct OpenURLAction {
     let action: (URL) -> Void
 
+    @MainActor
     init<Backend: AppBackend>(backend: Backend) {
         action = { url in
             do {

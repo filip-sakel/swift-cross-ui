@@ -5,7 +5,7 @@ extension View {
 }
 
 @View
-struct BackgroundModifier<Background: View, Foreground: View>: TypeSafeView {
+struct BackgroundModifier<Background: View, Foreground: View>: View, TypeSafeView {
     typealias Children = TupleView2<Background, Foreground>.Children
 
     var body: TupleView2<Background, Foreground>

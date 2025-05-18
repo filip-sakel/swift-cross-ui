@@ -2,39 +2,41 @@
 /// as a writable reference to the value.
 @dynamicMemberLookup
 @propertyWrapper
-public class Binding<Value> {
+public struct Binding<Value> {
+    @MainActor
     public var wrappedValue: Value {
         get {
             getValue()
         }
-        set {
+        nonmutating set {
             setValue(newValue)
         }
     }
 
     /// The stored getter.
-    private let getValue: () -> Value
+    private let getValue: @MainActor () -> Value
     /// The stored setter.
-    private let setValue: (Value) -> Void
+    private let setValue: @MainActor (Value) -> Void
 
     /// Creates a binding with a custom getter and setter. To create a binding from
     /// an `@State` property use its projected value instead: e.g. `$myStateProperty`
     /// will give you a binding for reading and writing `myStateProperty` (assuming that
     /// `myStateProperty` is marked with `@State` at its declaration site).
-    public init(get: @escaping () -> Value, set: @escaping (Value) -> Void) {
+    @preconcurrency
+    public init(get: @MainActor @escaping () -> Value, set: @MainActor @escaping (Value) -> Void) {
         self.getValue = get
         self.setValue = set
     }
 
     /// Projects a property of a binding.
-    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> Binding<T> {
+    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T> & Sendable) -> Binding<T> {
         get {
             Binding<T>(
-                get: {
-                    self.wrappedValue[keyPath: keyPath]
+                get: { @MainActor in
+                    wrappedValue[keyPath: keyPath]
                 },
-                set: { newValue in
-                    self.wrappedValue[keyPath: keyPath] = newValue
+                set: { @MainActor newValue in
+                    wrappedValue[keyPath: keyPath] = newValue
                 }
             )
         }
@@ -52,3 +54,5 @@ public class Binding<Value> {
         )
     }
 }
+
+extension Binding: Sendable where Value: Sendable {}

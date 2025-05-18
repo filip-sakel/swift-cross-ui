@@ -1,3 +1,4 @@
+@MainActor
 public struct ViewUpdateResult {
     public var size: ViewSize
     public var preferences: PreferenceValues

@@ -1,5 +1,5 @@
 @View
-public struct List<SelectionValue: Hashable, RowView: View>: TypeSafeView {
+public struct List<SelectionValue: Hashable, RowView: View>: View, TypeSafeView {
     typealias Children = ListViewChildren<PaddingModifierView<RowView>>
 
     public let body = EmptyView()
@@ -216,7 +216,7 @@ public struct List<SelectionValue: Hashable, RowView: View>: TypeSafeView {
     }
 }
 
-class ListViewChildren<RowView: View>: ViewGraphNodeChildren {
+final class ListViewChildren<RowView: View>: ViewGraphNodeChildren {
     var nodes: [AnyViewGraphNode<RowView>]
 
     init() {
@@ -229,5 +229,11 @@ class ListViewChildren<RowView: View>: ViewGraphNodeChildren {
 
     var widgets: [AnyWidget] {
         nodes.map(\.widget)
+    }
+
+    isolated deinit {
+        for node in nodes {
+            node.destroy()
+        }
     }
 }

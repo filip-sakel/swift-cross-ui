@@ -6,15 +6,28 @@
 /// ``AnyView`` has significantly more overhead than strongly
 /// typed views.
 @View
-public struct AnyView: TypeSafeView {
+public struct AnyView: View, TypeSafeView {
     typealias Children = AnyViewChildren
 
     public var body = EmptyView()
 
-    var child: any View
+    var child: (typeName: String, erasedView: _UnsafeAnyType)
+    var getChildNode: (
+        _ backend: _UnsafeAnyAppBackend,
+        _ environment: EnvironmentValues,
+        _ snapshot: ViewGraphSnapshotter.NodeSnapshot?
+    ) -> ErasedViewGraphNode 
 
-    public init(_ child: any View) {
-        self.child = child
+    public init<V: View>(_ child: V) {
+        self.child = (V._name(), _UnsafeAnyType(child))
+        self.getChildNode = { backend, environment, snapshot in
+            ErasedViewGraphNode(
+                for: child,
+                backend: backend,
+                snapshot: snapshot,
+                environment: environment
+            )
+        }
     }
 
     func children<Backend: AppBackend>(
@@ -24,10 +37,11 @@ public struct AnyView: TypeSafeView {
     ) -> AnyViewChildren {
         let snapshot = snapshots?.count == 1 ? snapshots?.first : nil
         return AnyViewChildren(
-            from: self,
-            backend: backend,
-            snapshot: snapshot,
-            environment: environment
+            node: getChildNode(
+                backend.erased,
+                environment,
+                snapshot
+            )
         )
     }
 
@@ -62,7 +76,8 @@ public struct AnyView: TypeSafeView {
         dryRun: Bool
     ) -> ViewUpdateResult {
         var (viewTypesMatched, result) = children.node.updateWithNewView(
-            child,
+            child.typeName,
+            child.erasedView,
             proposedSize,
             environment,
             dryRun
@@ -72,16 +87,17 @@ public struct AnyView: TypeSafeView {
         // view graph node for the new view.
         if !viewTypesMatched {
             children.widgetToReplace = children.node.getWidget()
-            children.node = ErasedViewGraphNode(
-                for: child,
-                backend: backend,
-                environment: environment
+            children.node = getChildNode(
+                backend.erased,
+                environment,
+                nil
             )
 
             // We can just assume that the update succeeded because we just created the node
             // a few lines earlier (so it's guaranteed that the view types match).
             let (_, newResult) = children.node.updateWithNewView(
-                child,
+                child.typeName,
+                child.erasedView,
                 proposedSize,
                 environment,
                 dryRun
@@ -106,7 +122,7 @@ public struct AnyView: TypeSafeView {
     }
 }
 
-class AnyViewChildren: ViewGraphNodeChildren {
+final class AnyViewChildren: ViewGraphNodeChildren {
     /// The erased underlying node.
     var node: ErasedViewGraphNode
     /// If the displayed view changed during a dry-run update then this stores the widget of the replaced view.
@@ -121,17 +137,11 @@ class AnyViewChildren: ViewGraphNodeChildren {
     }
 
     /// Creates the erased child node and wraps the child's widget in a single-child container.
-    init<Backend: AppBackend>(
-        from view: AnyView,
-        backend: Backend,
-        snapshot: ViewGraphSnapshotter.NodeSnapshot?,
-        environment: EnvironmentValues
-    ) {
-        node = ErasedViewGraphNode(
-            for: view.child,
-            backend: backend,
-            snapshot: snapshot,
-            environment: environment
-        )
+    init(node: ErasedViewGraphNode) {
+        self.node = node
+    }
+
+    isolated deinit {
+        node.destroy()
     }
 }

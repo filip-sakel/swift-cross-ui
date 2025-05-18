@@ -12,7 +12,7 @@ extension View {
 }
 
 @View
-struct OnAppearModifier<Content: View> {
+struct OnAppearModifier<Content: View>: View {
     var body: TupleView1<Content>
     var action: () -> Void
 

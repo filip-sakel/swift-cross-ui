@@ -1,3 +1,5 @@
+
+@MainActor
 public protocol TableRowContent<RowValue> {
     associatedtype RowValue
     associatedtype RowContent: View
@@ -33,7 +35,7 @@ public struct TupleTableRowContent1<
 
     public var labels: [String] {
         [
-            column0.label
+            column0.label,
         ]
     }
 
@@ -625,3 +627,4 @@ public struct TupleTableRowContent10<
         )
     }
 }
+

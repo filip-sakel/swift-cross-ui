@@ -1,7 +1,9 @@
 // import Foundation
 
-public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
-    public struct NodeSnapshot: CustomDebugStringConvertible, Equatable {
+@MainActor
+public struct ViewGraphSnapshotter {
+    @MainActor
+    public struct NodeSnapshot: @MainActor CustomDebugStringConvertible, Equatable {
         var viewTypeName: String
         /// Property names mapped to encoded JSON objects
         var state: [String: Data]
@@ -66,12 +68,13 @@ public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
     public init() {}
 
     public func transform<U: View, Backend: AppBackend>(
-        node: ViewGraphNode<U, Backend>
+        node: ViewGraphNode<U, Backend>,
+        backend: Backend
     ) -> NodeSnapshot {
-        Self.snapshot(of: AnyViewGraphNode(node))
+        Self.snapshot(of: AnyViewGraphNode(node, backend: backend), backend: backend)
     }
 
-    public static func snapshot<V: View>(of node: AnyViewGraphNode<V>) -> NodeSnapshot {
+    public static func snapshot<V: View, Backend: AppBackend>(of node: AnyViewGraphNode<V>, backend: Backend) -> NodeSnapshot {
         var stateSnapshot: [String: Data] = [:]
         let stateProperties = node.getView()._observeState()
         for stateProperty: _AnyStateProperty in stateProperties {
@@ -87,7 +90,7 @@ public struct ViewGraphSnapshotter: ErasedViewGraphNodeTransformer {
         let nodeChildren = node.getChildren().erasedNodes
         let snapshotter = ViewGraphSnapshotter()
         let childSnapshots = nodeChildren.map { child in
-            child.transform(with: snapshotter)
+            child.transform(with: snapshotter, backend: backend)
         }
 
         return NodeSnapshot(

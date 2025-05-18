@@ -1,6 +1,6 @@
 // // import Foundation  // for sin and cos
 
-public enum StrokeCap {
+public enum StrokeCap: Sendable {
     /// The stroke ends square exactly at the last point.
     case butt
     /// The stroke ends with a semicircle.
@@ -9,7 +9,7 @@ public enum StrokeCap {
     case square
 }
 
-public enum StrokeJoin {
+public enum StrokeJoin: Sendable {
     /// Corners are sharp, unless they are longer than `limit` times half the stroke width,
     /// in which case they are beveled.
     case miter(limit: Double)
@@ -19,7 +19,7 @@ public enum StrokeJoin {
     case bevel
 }
 
-public struct StrokeStyle {
+public struct StrokeStyle: Sendable {
     public var width: Double
     public var cap: StrokeCap
     public var join: StrokeJoin
@@ -32,7 +32,7 @@ public struct StrokeStyle {
 }
 
 /// An enum describing how a path is shaded.
-public enum FillRule {
+public enum FillRule: Sendable {
     /// A region is shaded if it is enclosed an odd number of times.
     case evenOdd
     /// A region is shaded if it is enclosed at all.
@@ -45,7 +45,7 @@ public enum FillRule {
 ///
 /// Performing an affine transform consists of multiplying the matrix ``linearTransform``
 /// by the point as a column vector, then adding ``translation``.
-public struct AffineTransform: Equatable, CustomDebugStringConvertible {
+public struct AffineTransform: Equatable, Sendable, CustomDebugStringConvertible {
     /// The linear transformation. This is a 2x2 matrix stored in row-major order.
     ///
     /// The four properties (`x`, `y`, `z`, `w`) correspond to the 2x2 matrix as follows:

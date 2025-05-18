@@ -14,7 +14,7 @@ extension View {
 }
 
 @View
-struct AlertModifierView<Child: View>: TypeSafeView {
+struct AlertModifierView<Child: View>: View, TypeSafeView {
     typealias Children = AlertModifierViewChildren<Child>
 
     var body = EmptyView()
@@ -35,7 +35,8 @@ struct AlertModifierView<Child: View>: TypeSafeView {
                     for: child,
                     backend: backend,
                     environment: environment
-                )
+                ),
+                backend: backend,
             ),
             alert: nil
         )
@@ -89,7 +90,7 @@ struct AlertModifierView<Child: View>: TypeSafeView {
     }
 }
 
-class AlertModifierViewChildren<Child: View>: ViewGraphNodeChildren {
+final class AlertModifierViewChildren<Child: View>: ViewGraphNodeChildren {
     var childNode: AnyViewGraphNode<Child>
     var alert: Any?
 
@@ -107,5 +108,9 @@ class AlertModifierViewChildren<Child: View>: ViewGraphNodeChildren {
     ) {
         self.childNode = childNode
         self.alert = alert
+    }
+
+    isolated deinit {
+        childNode.destroy()
     }
 }

@@ -1,5 +1,6 @@
 /// A result builder for constructing a collection of table columns.
 @resultBuilder
+@MainActor
 public struct TableRowBuilder<RowValue> {
     public static func buildBlock() -> EmptyTableRowContent<RowValue> {
         EmptyTableRowContent<RowValue>()

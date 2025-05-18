@@ -6,7 +6,7 @@ import _EmbdeddedShims
 
 // MARK: - URL
 
-public struct URL: Hashable {
+public struct URL: Sendable, Hashable {
     public var pathExtension: String
     public init(_ path: String) {
         self.pathExtension = path
@@ -665,7 +665,7 @@ extension ContiguousArray: MutableDataProtocol where Element == UInt8 { }
 
 @_extern(c, "free")
 @usableFromInline
-func free(_ ptr: UnsafeMutableRawPointer)
+func free(_ ptr: UnsafeMutableRawPointer?)
 
 @_extern(c, "memset")
 @usableFromInline

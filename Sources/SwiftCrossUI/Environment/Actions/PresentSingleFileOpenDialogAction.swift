@@ -17,8 +17,8 @@ public struct PresentSingleFileOpenDialogAction {
         allowSelectingDirectories: Bool = false
     ) async -> URL? {
         func chooseFile<Backend: AppBackend>(backend: Backend) async -> URL? {
-            await withCheckedContinuation { continuation in
-                backend.runInMainThread {
+            await withCheckedContinuation { @MainActor continuation in
+                backend.runInMainThread { @MainActor in
                     let window: Backend.Window? =
                         if let window = self.window {
                             .some(window as! Backend.Window)

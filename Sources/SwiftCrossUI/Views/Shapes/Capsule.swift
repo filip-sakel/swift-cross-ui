@@ -1,6 +1,6 @@
 /// A rounded rectangle whose corner radius is equal to half the length of its shortest side.
 @Shape
-public struct Capsule {
+public struct Capsule: Shape {
     public init() {}
 
     public func path(in bounds: Path.Rect) -> Path {

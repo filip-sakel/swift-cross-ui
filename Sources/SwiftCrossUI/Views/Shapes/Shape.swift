@@ -120,4 +120,8 @@ final class ShapeStorage: ViewGraphNodeChildren {
     let erasedNodes: [ErasedViewGraphNode] = []
     var backendPath: Any!
     var oldPath: Path?
+
+    deinit {
+        // We don't have any child nodes to destory.
+    }
 }

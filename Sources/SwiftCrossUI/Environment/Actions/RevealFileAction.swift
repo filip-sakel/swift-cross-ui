@@ -2,15 +2,16 @@
 
 /// Reveals a file in the system's file manager. This opens
 /// the file's enclosing directory and highlighting the file.
+@MainActor
 public struct RevealFileAction {
-    let action: (URL) -> Void
+    let action: @MainActor @Sendable (URL) -> Void
 
     init?<Backend: AppBackend>(backend: Backend) {
         guard backend.canRevealFiles else {
             return nil
         }
 
-        action = { file in
+        action = { @MainActor file in
             do {
                 try backend.revealFile(file)
             } catch {

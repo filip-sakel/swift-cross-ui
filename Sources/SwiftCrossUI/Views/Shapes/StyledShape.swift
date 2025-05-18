@@ -6,7 +6,7 @@ public protocol StyledShape: Shape {
 }
 
 @Shape
-struct StyledShapeImpl<Base: Shape>: StyledShape {
+struct StyledShapeImpl<Base: Shape>: Shape, StyledShape {
     var base: Base
     var strokeColor: Color?
     var fillColor: Color?

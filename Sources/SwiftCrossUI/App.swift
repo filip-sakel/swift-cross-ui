@@ -5,6 +5,7 @@ import JavaScriptKit
 #endif
 
 /// An application.
+@MainActor
 public protocol App {
     /// The backend used to render the app.
     associatedtype Backend: AppBackend
@@ -40,13 +41,6 @@ public protocol App {
     // view is removed from the view graph.
     func _observeState() -> [_AnyStateProperty]
 }
-
-/// Force refresh the entire scene graph. Used by hot reloading. If you need to do
-/// this in your own code then something has gone very wrong...
-public var _forceRefresh: () -> Void = {}
-
-/// Metadata embedded by Swift Bundler if present. Loaded at app start up.
-private var swiftBundlerAppMetadata: AppMetadata?
 
 /// An error encountered when parsing Swift Bundler metadata.
 #if hasFeature(Embedded)
@@ -89,7 +83,7 @@ private enum SwiftBundlerMetadataError: LocalizedError {
 extension App {
     /// Metadata loaded at app start up.
     public static var metadata: AppMetadata? {
-        swiftBundlerAppMetadata
+        _AppGlobalState.shared.swiftBundlerAppMetadata
     }
 
     /// Runs the application.
@@ -98,11 +92,11 @@ extension App {
         JavaScriptEventLoop.installGlobalExecutor()
         #endif
         
-        swiftBundlerAppMetadata = extractSwiftBundlerMetadata()
+        _AppGlobalState.shared.swiftBundlerAppMetadata = extractSwiftBundlerMetadata()
 
         let app = Self()
         let _app = _App(app)
-        _forceRefresh = {
+        _AppGlobalState.shared._forceRefresh = {
             app.backend.runInMainThread {
                 _app.forceRefresh()
             }

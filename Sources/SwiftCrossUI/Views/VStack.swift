@@ -1,6 +1,6 @@
 /// A view that arranges its subviews vertically.
 @View
-public struct VStack<Content: View> {
+public struct VStack<Content: View>: View {
     static var defaultSpacing: Int { 10 }
 
     public var body: Content
