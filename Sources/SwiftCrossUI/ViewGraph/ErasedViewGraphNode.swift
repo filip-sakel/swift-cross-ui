@@ -1,6 +1,6 @@
 // import Foundation
 
-public struct ErasedViewGraphNode: ~Copyable {
+public struct ErasedViewGraphNode {
     public var node: Any
 
     /// If the new view doesn't have the same type as the old view then the returned
