@@ -84,11 +84,21 @@ public class Publisher {
         observations[id] = closure
         nextObservationId += 1
 
-        return Cancellable { [weak self] in
+        #if !hasFeature(Embedded)
+        let cancellable = Cancellable { [weak self] in
             guard let self = self else { return }
             self.observations[id] = nil
         }
         .tag(with: tag)
+        #else
+        #warning("Lack of [weak self] in Embedded mode will cause a reference cycle.")
+        let cancellable = Cancellable { [self] in
+            self.observations[id] = nil
+        }
+        .tag(with: tag)
+        #endif
+
+        return cancellable
     }
 
     /// Links the publisher to an upstream, meaning that observations from the upstream

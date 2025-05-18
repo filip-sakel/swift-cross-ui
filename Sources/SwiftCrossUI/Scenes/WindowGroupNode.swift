@@ -44,6 +44,7 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
         self.window = window
         parentEnvironment = environment
 
+        #if !hasFeature(Embedded)
         backend.setResizeHandler(ofWindow: window) { [weak self] newSize in
             guard let self else {
                 return
@@ -57,7 +58,22 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
                     !backend.isWindowProgrammaticallyResizable(window)
             )
         }
+        #else 
+        #warning("The lack of [weak self] causes a retain cycle in the embedded backend. This is a bug in the backend.")
+        backend.setResizeHandler(ofWindow: window) { [self] newSize in
+            _ = self.update(
+                self.scene,
+                proposedWindowSize: newSize,
+                backend: backend,
+                environment: self.parentEnvironment,
+                windowSizeIsFinal:
+                    !backend.isWindowProgrammaticallyResizable(window)
+            )
+        }
+        #endif
 
+
+        #if !hasFeature(Embedded)
         backend.setWindowEnvironmentChangeHandler(of: window) { [weak self] in
             guard let self else {
                 return
@@ -71,6 +87,19 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
                     !backend.isWindowProgrammaticallyResizable(window)
             )
         }
+        #else
+        #warning("The lack of [weak self] causes a retain cycle in the embedded backend. This is a bug in the backend.")
+        backend.setWindowEnvironmentChangeHandler(of: window) { [self] in
+            _ = self.update(
+                self.scene,
+                proposedWindowSize: backend.size(ofWindow: window),
+                backend: backend,
+                environment: self.parentEnvironment,
+                windowSizeIsFinal:
+                    !backend.isWindowProgrammaticallyResizable(window)
+            )
+        }
+        #endif
     }
 
     public func update<Backend: AppBackend>(
@@ -120,6 +149,7 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
             scene = newScene
         }
 
+        #if !hasFeature(Embedded)
         let environment =
             backend.computeWindowEnvironment(window: window, rootEnvironment: environment)
             .with(\.onResize) { [weak self] _ in
@@ -135,6 +165,23 @@ public final class WindowGroupNode<Content: View>: SceneGraphNode {
                 )
             }
             .with(\.window, window)
+        #else
+        #warning("The lack of [weak self] causes a retain cycle in the embedded backend. This is a bug in the backend.")
+        let environment =
+            backend.computeWindowEnvironment(window: window, rootEnvironment: environment)
+            .with(\.onResize) { [self] _ in
+                // TODO: Figure out whether this would still work if we didn't recompute the
+                //   scene's body. I have a vague feeling that it wouldn't work in all cases?
+                //   But I don't have the time to come up with a counterexample right now.
+                _ = self.update(
+                    self.scene,
+                    proposedWindowSize: backend.size(ofWindow: window),
+                    backend: backend,
+                    environment: environment
+                )
+            }
+            .with(\.window, window)
+        #endif
 
         let dryRunResult: ViewUpdateResult?
         if !windowSizeIsFinal {

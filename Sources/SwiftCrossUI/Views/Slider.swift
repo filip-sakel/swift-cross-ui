@@ -99,6 +99,7 @@ public struct Slider: ElementaryView {
         dryRun: Bool
     ) -> ViewUpdateResult {
         if !dryRun {
+            #if !hasFeature(Embedded)
             backend.updateSlider(
                 widget,
                 minimum: minimum,
@@ -110,6 +111,17 @@ public struct Slider: ElementaryView {
                 }
                 value.wrappedValue = newValue
             }
+            #else 
+            #warning("Lack of [weak value] in Embedded mode will cause a reference cycle.")
+            backend.updateSlider(
+                widget,
+                minimum: minimum,
+                maximum: maximum,
+                decimalPlaces: decimalPlaces
+            ) { [value] newValue in
+                value?.wrappedValue = newValue
+            }
+            #endif
 
             if let value = value?.wrappedValue {
                 backend.setValue(ofSlider: widget, to: value)

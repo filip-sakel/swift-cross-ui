@@ -75,10 +75,9 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
 
         let viewEnvironment = updateEnvironment(environment)
 
-        updateDynamicProperties(
-            of: view,
-            previousValue: nil,
-            environment: viewEnvironment
+        view._updateDynamicProperties(
+            with: environment,
+            previousValue: nil
         )
 
         let children = view.children(
@@ -95,35 +94,25 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
         )
         _widget = widget
 
-        let tag = String(String(describing: NodeView.self).split(separator: "<")[0])
+        let tag = NodeView._name()
         backend.tag(widget: widget, as: tag)
 
         // Update the view and its children when state changes (children are always updated first).
-        let mirror = Mirror(reflecting: view)
-        for property in mirror.children {
-            if property.label == "state" && property.value is ObservableObject {
-                print(
-                    """
-
-                    warning: The View.state protocol requirement has been removed in favour of
-                             SwiftUI-style @State annotations. Decorate \(NodeView.self).state
-                             with the @State property wrapper to restore previous behaviour.
-
-                    """
-                )
+        let stateProps = nodeView._observeState()
+        for property in stateProps {
+            #if !hasFeature(Embedded)
+            let uiUpdater = property.didChange.observeAsUIUpdater(backend: backend) { [weak self] in
+                guard let self = self else { return }
+                self.bottomUpUpdate()
             }
-
-            guard let value = property.value as? StateProperty else {
-                continue
+            #else
+            #warning("Lack of [weak self] in Embedded mode will cause a reference cycle.")
+            let uiUpdater = property.didChange.observeAsUIUpdater(backend: backend) { [self] in
+                self.bottomUpUpdate()
             }
+            #endif
 
-            cancellables.append(
-                value.didChange
-                    .observeAsUIUpdater(backend: backend) { [weak self] in
-                        guard let self = self else { return }
-                        self.bottomUpUpdate()
-                    }
-            )
+            cancellables.append(uiUpdater)
         }
     }
 
@@ -172,10 +161,17 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
     }
 
     private func updateEnvironment(_ environment: EnvironmentValues) -> EnvironmentValues {
+        #if !hasFeature(Embedded)
         environment.with(\.onResize) { [weak self] _ in
             guard let self = self else { return }
             self.bottomUpUpdate()
         }
+        #else
+        #warning("Lack of [weak self] in Embedded mode will cause a reference cycle.")
+        environment.with(\.onResize) { [self] _ in
+            self.bottomUpUpdate()
+        }
+        #endif
     }
 
     /// Recomputes the view's body, and updates its widget accordingly. The view may or may not
@@ -251,11 +247,7 @@ public class ViewGraphNode<NodeView: View, Backend: AppBackend> {
 
         let viewEnvironment = updateEnvironment(environment)
 
-        updateDynamicProperties(
-            of: view,
-            previousValue: previousView,
-            environment: viewEnvironment
-        )
+        view._updateDynamicProperties(with: environment, previousValue: previousView)
 
         if !dryRun {
             backend.show(widget: widget)

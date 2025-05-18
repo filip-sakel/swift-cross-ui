@@ -1,4 +1,4 @@
-// swift-tools-version:5.10
+// swift-tools-version:6.1
 
 import CompilerPluginSupport
 import Foundation
@@ -79,6 +79,12 @@ let package = Package(
         // .library(name: "QtBackend", type: libraryType, targets: ["QtBackend"]),
         // .library(name: "LVGLBackend", type: libraryType, targets: ["LVGLBackend"]),
     ],
+    traits: [
+        .trait(
+            name: "Embedded",
+        ),
+        .default(enabledTraits: ["Embedded"]), // Defines all the default enabled traits
+    ],
     dependencies: [
         // .package(name: "swift-image-formats", path: "../swift-image-formats"),
 
@@ -115,7 +121,11 @@ let package = Package(
             url: "https://github.com/stackotter/swift-winui",
             branch: "fad446caf8f40370d82a043ec293646023e07e61"
         ),
-        .package(url: "https://github.com/swiftwasm/JavaScriptKit.git", branch: "main"),
+        .package(
+            url: "https://github.com/swiftwasm/JavaScriptKit.git",
+            branch: "main"
+            // traits: ["Embedded"]
+        ),
         // .package(
         //     url: "https://github.com/stackotter/TermKit",
         //     revision: "163afa64f1257a0c026cc83ed8bc47a5f8fc9704"
