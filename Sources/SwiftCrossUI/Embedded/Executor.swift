@@ -544,10 +544,10 @@ import _Concurrency
 func epoll_create1(_ flags: Int32) -> Int32
 
 @_extern(c, "epoll_ctl")
-func epoll_ctl(_ epfd: Int32, _ op: Int32, _ fd: Int32, _ event: UnsafeMutablePointer<epoll_event>) -> Int32
+func epoll_ctl(_ epfd: Int32, _ op: Int32, _ fd: Int32, _ event: UnsafeMutablePointer<Int>) -> Int32
 
 @_extern(c, "epoll_wait")
-func epoll_wait(_ epfd: Int32, _ events: UnsafeMutablePointer<epoll_event>, _ maxevents: Int32, _ timeout: Int32) -> Int32
+func epoll_wait(_ epfd: Int32, _ events: UnsafeMutablePointer<Int>, _ maxevents: Int32, _ timeout: Int32) -> Int32
 
 @_extern(c, "eventfd")
 func eventfd(_ initval: UInt32, _ flags: Int32) -> Int32
@@ -565,7 +565,7 @@ func close(_ fd: Int32) -> Int32
 func timerfd_create(_ clockid: Int32, _ flags: Int32) -> Int32
 
 @_extern(c, "timerfd_settime")
-func timerfd_settime(_ fd: Int32, _ flags: Int32, _ new_value: UnsafePointer<itimerspec>, _ old_value: UnsafeMutablePointer<itimerspec>?) -> Int32
+func timerfd_settime(_ fd: Int32, _ flags: Int32, _ new_value: UnsafePointer<Int>, _ old_value: UnsafeMutablePointer<Int>?) -> Int32
 
 
 public struct timespec {
@@ -601,33 +601,11 @@ let CLOCK_MONOTONIC: Int32 = 1
 
 
 final class LinuxEventLoop {
-    private let epollFD: Int32
-    private let eventFD: Int32
-    private var timerFDs: [Int32: UnownedJob] = [:]
-
     init() {
-        epollFD = epoll_create1(0)
-        eventFD = eventfd(0, 0)
-
-        // Register eventfd with epoll for wakeups
-        var event = epoll_event(events: UInt32(EPOLLIN), data: UInt64(eventFD))
-        epoll_ctl(epollFD, EPOLL_CTL_ADD, eventFD, &event)
     }
 
     func enqueue(_ job: UnownedJob) {
-        // Put job into internal queue and wake event loop
-        jobQueue.append(job)
-        var one: UInt64 = 1
-        write(eventFD, &one, MemoryLayout.size(ofValue: one))
-    }
-
-    private func convertToSecondsAndNanos<C: Clock>(
-        _ duration: C.Duration,
-        clock: C
-    ) -> (seconds: Int64, nanos: Int64) {
-        let swiftDuration = clock.convert(from: duration)!
-        let (seconds, attoseconds) = swiftDuration.components
-        return (Int64(seconds), Int64(attoseconds) / 1_000_000)
+        fatalError("Not implemented")
     }
 
     func enqueue<C: Clock>(
@@ -636,44 +614,11 @@ final class LinuxEventLoop {
         tolerance: C.Duration?,
         clock: C
     ) {
-        let fd = timerfd_create(CLOCK_MONOTONIC, 0)
-        let (seconds, nanos) = convertToSecondsAndNanos(delay, clock)
-        var spec = itimerspec(
-            it_interval: timespec(tv_sec: 0, tv_nsec: 0),
-            it_value: timespec(tv_sec: seconds, tv_nsec: nanos)
-        )
-        timerfd_settime(fd, 0, &spec, nil)
-        timerFDs[fd] = UnownedJob(job)
-
-        var event = epoll_event(events: UInt32(EPOLLIN), data: UInt64(fd))
-        epoll_ctl(epollFD, EPOLL_CTL_ADD, fd, &event)
+        fatalError("Not implemented")
     }
 
     func run() {
-        while true {
-            var events = [epoll_event](repeating: epoll_event(), count: 64)
-            let nfds = epoll_wait(epollFD, &events, Int32(events.count), -1)
-
-            for i in 0..<nfds {
-                let fd = Int32(events[Int(i)].data)
-                if fd == eventFD {
-                    var buffer: UInt64 = 0
-                    read(eventFD, &buffer, 8)
-                    // Drain internal job queue
-                    for job in jobQueue.drain() {
-                        job.runSynchronously(on: self)
-                    }
-                } else if let job = timerFDs.removeValue(forKey: fd) {
-                    job.runSynchronously(on: self)
-                    close(fd)
-                }
-            }
-        }
-    }
-
-    func stop() {
-        close(epollFD)
-        close(eventFD)
+        fatalError("Not implemented")
     }
 }
 

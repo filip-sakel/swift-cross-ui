@@ -1,5 +1,5 @@
 /// A control that displays an editable text interface.
-@View
+@View(checkBody: false)
 public struct TextField: ElementaryView {
     /// The label to show when the field is empty.
     private var placeholder: String

@@ -681,7 +681,7 @@ func memcmp(_ lhs: UnsafeRawPointer, _ rhs: UnsafeRawPointer, _ size: Int) -> In
 
 @_extern(c, "memmove")
 @usableFromInline
-func memmove(_ dest: UnsafeMutableRawPointer, _ src: UnsafeRawPointer, _ size: Int) -> UnsafeMutableRawPointer
+func memmove(_ dest: UnsafeMutableRawPointer, _ src: UnsafeRawPointer, _ size: Int)
 
 @_extern(c, "munmap")
 @usableFromInline

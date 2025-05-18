@@ -79,15 +79,30 @@ func createNameMember(structDecl: StructDeclSyntax, type: some TypeSyntaxProtoco
 }
 
 func createObserveMethod(structDecl: StructDeclSyntax, dynamicProps: [String], context: some MacroExpansionContext) -> DeclSyntax {
+    // The body of the method
+    let body: StmtSyntax 
+
+    if dynamicProps.isEmpty {
+        // If there are no dynamic properties, return an empty array
+        body = """
+                return []
+            """
+    } else {
+        // Otherwise, create an array of observers
+        body = """
+                var observers: [_AnyStateProperty] = []
+                \(raw: dynamicProps.map {
+                    """
+                        _processDynamicProperty(self.\($0)) { observers.append(contentsOf: $0._observeState()) }
+                    """
+                }.joined(separator: "\n"))
+                return observers
+            """
+    }
+
     let observeMethod: DeclSyntax = """
         public func _observeState() -> [_AnyStateProperty] {
-            var observers: [_AnyStateProperty] = []
-            \(raw: dynamicProps.map {
-                """
-                    _processDynamicProperty(self.\($0)) { observers.append(contentsOf: $0._observeState()) }
-                """
-            }.joined(separator: "\n"))
-            return observers
+        \(body)
         }
         """
 

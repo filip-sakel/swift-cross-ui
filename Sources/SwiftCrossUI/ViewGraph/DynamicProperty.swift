@@ -35,29 +35,14 @@ extension DynamicProperty {
     /// A no-op by default.
     public func update(
         with environment: EnvironmentValues,
+        propertyName: String,
         previousValue: Self?
     ) {}
 }
 
-public protocol _DynamicPropertyContainer {
-    /// Update the dynamic properties of a value given a previous instance (if available).
-    /// - Parameters:
-    ///   - environment: The environment to use when updating the properties.
-    ///   - previousValue: The previous value of the dynamic property. This is
-    ///                 used to determine whether the property has changed.
-    func _updateDynamicProperties(
-        with environment: EnvironmentValues,
-        previousValue: Self?
-    )
-
-    /// Publishers to all the state properties that need to be
-    /// observed. This is used to automatically cancel the subscriptions when the 
-    // view is removed from the view graph.
-    func _observeState() -> [_AnyStateProperty]
-}
-
+#warning("Restore functionality for View, App, Shape + updateDynamicProperties")
 #if !hasFeature(Embedded)
-extension _DynamicPropertyContainer {
+extension DynamicProperty {
     func _updateDynamicProperties(
         with environment: EnvironmentValues,
         previousValue: Self?

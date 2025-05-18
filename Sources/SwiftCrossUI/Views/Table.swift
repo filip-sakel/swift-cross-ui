@@ -167,7 +167,8 @@ class TableViewChildren<RowContent: View>: ViewGraphNodeChildren {
 }
 
 /// An empty view that simply manages a row's children. Not intended to be rendered directly.
-struct RowView<Content: View>: View {
+@View
+struct RowView<Content: View> {
     var body: Content
 
     init(_ content: Content) {
