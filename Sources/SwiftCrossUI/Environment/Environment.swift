@@ -36,33 +36,78 @@
 /// ```
 @propertyWrapper
 public struct Environment<Value>: DynamicProperty {
-    var keyPath: KeyPath<EnvironmentValues, Value>
-    var value: Box<Value?>
+    struct ReflectionStorage {
+        let keyPath: KeyPath<EnvironmentValues, Value>
+        var value: Box<Value?>
+
+        func getValue() -> Value? {
+            value.value
+        }
+        func getPropertyPath() -> String {
+            "\(keyPath)"
+        }
+    }
+
+    struct StaticStorage {
+        var box: Box<(value: Value, propertyPath: String)?>
+
+        func getValue() -> Value? {
+            box.value?.value
+        }
+        func getPropertyPath() -> String {
+            box.value?.propertyPath ?? "<unknown property>"
+        }
+    }
+
+    #if !hasFeature(Embedded)
+    var _storage: ReflectionStorage
+    #else
+    var _storage: StaticStorage
+    #endif
+
+    public init(_ keyPath: KeyPath<EnvironmentValues, Value>) {
+        #if !hasFeature(Embedded)
+        self._storage = ReflectionStorage(
+            keyPath: keyPath,
+            value: Box(value: nil)
+        )
+        #else
+        self._storage = StaticStorage(
+            box: Box(value: nil)
+        )
+        #endif
+    }
 
     public func update(
         with environment: EnvironmentValues,
         propertyName: String,
         previousValue: Self?
     ) {
-        value.value = environment[keyPath: keyPath]
+        #if !hasFeature(Embedded)
+        _storage.value.value = environment[keyPath: _storage.keyPath]
+        #endif
+        // If we're in Embedded mode, the dynamic-property container will call 
+        // `_updateValue(_: Value, _propertyPath: String)`
     }
 
+    #if hasFeature(Embedded)
+    @_documentation(visibility: private)
+    public func _updateValue(_ value: Value, _propertyPath: String) {
+        _storage.box.value = (value, _propertyPath)
+    }
+    #endif
+
     public var wrappedValue: Value {
-        guard let value = value.value else {
+        guard let value = _storage.getValue() else {
             fatalError(
                 """
-                Environment value \(keyPath) used before initialization. Don't \
+                Environment value \\.\(_storage.getPropertyPath()) used before initialization. Don't \
                 use @Environment properties before SwiftCrossUI requests the \
                 view's body.
                 """
             )
         }
         return value
-    }
-
-    public init(_ keyPath: KeyPath<EnvironmentValues, Value>) {
-        self.keyPath = keyPath
-        value = Box(value: nil)
     }
 
     public func _updateDynamicProperties(with environment: EnvironmentValues, propertyName: String, previousValue: Environment<Value>?) {

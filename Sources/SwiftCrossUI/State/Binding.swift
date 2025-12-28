@@ -45,11 +45,12 @@ public struct Binding<Value> {
 
     /// Returns a new binding that will perform an action whenever it is used to set
     /// the source of truth's value.
-    public func onChange(_ action: @escaping (Value) -> Void) -> Binding<Value> {
+    public func onChange(_ action: sending @escaping (Value) -> Void) -> Binding<Value> {
+        let setValue = self.setValue
         return Binding<Value>(
             get: getValue,
             set: { newValue in
-                self.setValue(newValue)
+                setValue(newValue)
                 action(newValue)
             }
         )

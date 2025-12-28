@@ -124,15 +124,21 @@ public struct ViewMacro: ExtensionMacro, MemberAttributeMacro {
         providingAttributesFor member: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
-        let builderAttributes = annotateBuilderProperty(
-            decl: member,
-            propertyName: "body",
-            builderMacroName: "ViewBuilder",
-            context: context
-        )
+        // return [annotateEnvironment(decl: declaration, context: context)].compactMap({ $0 })
+        // // let builderAttributes = annotateBuilderProperty(
+        // //     decl: member,
+        // //     propertyName: "body",
+        // //     builderMacroName: "ViewBuilder",
+        // //     context: context
+        // // )
 
-        let isolationAttributes = annotateMainActor(decl: member, context: context)
+        // // let isolationAttributes = annotateMainActor(decl: member, context: context)
 
-        return [isolationAttributes, builderAttributes].compactMap { $0 }
+        // // return [isolationAttributes, builderAttributes].compactMap { $0 }
+        let attr: AttributeSyntax = """
+            @_Environment(_propertyName: "colorScheme", _getValue: { $0.colorScheme })
+            """
+
+        return [attr]
     }
 }

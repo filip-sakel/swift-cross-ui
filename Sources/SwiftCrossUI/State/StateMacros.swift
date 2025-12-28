@@ -20,10 +20,20 @@ public macro App() =
 public macro Shape() =
     #externalMacro(module: "StateMacros", type: "ShapeMacro")
 
-// FIXME: Attach view builder to body if it's an implicit getter
+@freestanding(expression)
+public macro _environmentValuesContext() = 
+    #externalMacro(module: "StateMacros", type: "EnvironmentValuesMacro")
 
-// public macro _DynamicPropertyContainer() =
-//     #externalMacro(module: "StateMacros", type: "DynamicPropertyContainerMacro")
+// @attached(accessor)
+// public macro Environment<Value>(_ keyPath: _const KeyPath<EnvironmentValues, Value>) =
+//     #externalMacro(module: "StateMacros", type: "EnvironmentMacro")
+
+@freestanding(expression)
+public macro _typesStaticallyEqual<V>(_ arg1: V, _ arg2: V) -> Bool =
+    #externalMacro(module: "StateMacros", type: "TypeEqualityMacro")
+@freestanding(expression)
+public macro _typesStaticallyEqual<V1, V2>(_ arg1: V1, _ arg2: V2) -> Bool =
+    #externalMacro(module: "StateMacros", type: "TypeInequalityMacro")
 
 
 public struct _EmptyDynamicProperty {
@@ -43,6 +53,21 @@ public func _processDynamicProperty<T>(_ prop: T, _ process: (_EmptyDynamicPrope
 @_transparent
 public func _processDynamicProperty<T: DynamicProperty>(_ prop: T, _ process: (T) -> Void) {
     process(prop)
+}
+
+public struct _EmptyEnvironment {
+    public func _updateValue<Value>(_ value: Value, _propertyName: String) {}
+}
+
+@_transparent
+@_disfavoredOverload
+public func _isEnvironmentProperty<T>(_ prop: T) -> Bool { 
+    false
+}
+
+@_transparent
+public func _isEnvironmentProperty<Value>(_ prop: Environment<Value>) -> Bool {
+    true
 }
 
 @_transparent
@@ -111,10 +136,53 @@ struct MyView3: View {
     }
 }
 
+extension KeyPath {
+    public var __valueType: Value.Type {
+        return Value.self
+    }
+}
+
 @View 
 struct MyView4: View {
     @State var state: String
+    static let keyPath = \EnvironmentValues.colorScheme
+    @Environment(\.colorScheme) var colorScheme: ColorScheme
     static var state2: State<String> = State(wrappedValue: "Hello")
 
     var body: EmptyView
+
+    var hello: ColorScheme {
+        get {
+            // #assert(#_typesStaticallyEqual((\EnvironmentValues.chooseFile).__valueType, ColorScheme.self))
+            return _colorScheme.wrappedValue
+        }
+    }
+
+    func body2() {
+        colorScheme.defaultForegroundColor
+    }
 }
+
+@View
+struct MyPseudoView: View {
+    @Environment(\.colorScheme) var scheme
+
+    var body: some View {
+        Text("Hello, world!")
+            .padding()
+            .foregroundColor(scheme.defaultForegroundColor)
+    }
+}
+
+struct MyStruct {
+    func useContext(_ context: Void = #_environmentValuesContext) {}
+
+    func run() {
+        // useContext()
+        // useContext(#_environmentValuesContext)
+    }
+}
+
+// struct Hello {
+//     @Environment(\.colorScheme) var colorScheme
+// }

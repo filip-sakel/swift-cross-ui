@@ -166,6 +166,7 @@ let package = Package(
             ],
             swiftSettings: [
                 .enableExperimentalFeature("Embedded"),
+                .enableExperimentalFeature("StaticAssert"),
                 .enableExperimentalFeature("Extern"),
                 .enableUpcomingFeature("StrictMemorySafety"),
                 .enableExperimentalFeature("AllowUnsafeAttribute"),
